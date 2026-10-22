@@ -4,7 +4,7 @@ All schemas here are used exclusively by elderly-user-facing endpoints
 (/api/elderly/me/...). They are separate from the admin-facing schemas
 in elderly_schema.py which are used by admin-only routes.
 """
-from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator, model_validator
 from typing import Optional, List, Dict, Any
 import re
 from datetime import date, datetime
@@ -298,6 +298,12 @@ class MedicationCreate(BaseModel):
         if start and v < start:
             raise ValueError("End date must be on or after start date.")
         return v
+
+    @model_validator(mode="after")
+    def populate_times_from_intake(self):
+        if not self.times and self.intake_time:
+            self.times = parse_legacy_intake_time(self.intake_time)
+        return self
 
 
 class MedicationUpdate(BaseModel):
