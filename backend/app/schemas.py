@@ -143,7 +143,7 @@ class NotificationCreate(BaseModel):
     title: str = Field(..., min_length=2, max_length=150)
     message: str = Field(..., min_length=2)
     type: str = Field(default="announcement") # announcement, emergency, system
-    target_role: str = Field(default="all") # all, Elderly, Caregiver, Family Member
+    target_role: str = Field(default="all") # all, Elderly, Caregiver, Doctor
 
 class NotificationOut(BaseModel):
     id: str

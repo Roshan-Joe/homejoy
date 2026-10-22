@@ -4,8 +4,8 @@ from fastapi.responses import JSONResponse
 from pymongo.errors import PyMongoError
 from app.database import db, client
 from app.config import FRONTEND_URL
-from app.routers import auth, admin, user_router, role_router, elderly_router, caregiver_router, doctor_router, family_router
-from app.routers import elderly_client_router, caregiver_portal_router, family_portal_router
+from app.routers import auth, admin, user_router, role_router, elderly_router, caregiver_router, doctor_router
+from app.routers import elderly_client_router, caregiver_portal_router
 from app.services.role_service import RoleService
 
 app = FastAPI(
@@ -78,8 +78,6 @@ app.include_router(caregiver_portal_router.router)
 app.include_router(caregiver_portal_router.caregiver_elderly_router)
 app.include_router(caregiver_router.router)
 app.include_router(doctor_router.router)
-app.include_router(family_portal_router.router)
-app.include_router(family_router.router)
 
 
 @app.get("/health", summary="Safe system health check")

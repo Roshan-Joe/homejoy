@@ -391,7 +391,7 @@ def get_care_report(
             "age": e_doc.get("age", 78),
             "gender": e_doc.get("gender", "Unspecified"),
             "room_number": e_doc.get("room_number") or e_doc.get("address") or "Room 204",
-            "emergency_contact": e_doc.get("emergency_contact", "Designated Family")
+            "emergency_contact": e_doc.get("emergency_contact", "Designated Emergency Contact")
         },
         "caregiver": {
             "name": current_user.get("full_name") or current_user.get("name", "Caregiver"),
@@ -505,3 +505,75 @@ def get_guardian_daily_report_email_status_direct(
         elderly_id=elderly_id,
         date_str=date
     )
+
+
+# ---------------------------------------------------------------------------
+# 17. Handover Notes, Escalations, Trends & Official Care Report
+# ---------------------------------------------------------------------------
+
+@router.get("/handover", summary="Get recent handover notes")
+def get_handover_notes(
+    limit: int = Query(20, ge=1, le=50),
+    shift: Optional[str] = None,
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    from app.services.handover_service import HandoverService
+    return HandoverService.get_handovers(limit=limit)
+
+
+@router.post("/handover", summary="Log new shift handover note")
+def create_handover_note(
+    payload: dict,
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    from app.services.handover_service import HandoverService
+    return HandoverService.create_handover(current_user, payload)
+
+
+@router.get("/escalations", summary="Get missed check-in escalations")
+def get_escalations(
+    status: str = Query("active"),
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    from app.services.escalation_service import EscalationService
+    return EscalationService.get_active_escalations()
+
+
+@router.post("/escalations/scan", summary="Trigger missed check-in scan")
+def trigger_escalation_scan(
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    from app.services.escalation_service import EscalationService
+    return EscalationService.run_missed_checkin_scan()
+
+
+@router.put("/escalations/{escalation_id}/resolve", summary="Resolve missed check-in escalation")
+def resolve_escalation(
+    escalation_id: str,
+    payload: dict,
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    from app.services.escalation_service import EscalationService
+    notes = payload.get("resolution_notes", "Resolved by caregiver")
+    return EscalationService.resolve_escalation(escalation_id, current_user.get("id"), notes)
+
+
+@router.get("/elderly/{elderly_id}/trends", summary="Get 14-day telemetry trends for assigned elderly")
+def get_elderly_trends(
+    elderly_id: str,
+    days: int = Query(14, ge=7, le=30),
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    from app.services.elderly_client_service import ElderlyClientService
+    surrogate = {"id": elderly_id, "user_id": elderly_id}
+    return ElderlyClientService.get_wellness_trends(surrogate, days=days)
+
+
+@router.get("/elderly/{elderly_id}/care-report", summary="Generate official clinical care report")
+def get_official_care_report(
+    elderly_id: str,
+    days: int = Query(14, ge=7, le=30),
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    return CaregiverPortalService.get_official_care_report(current_user, elderly_id, days)
+

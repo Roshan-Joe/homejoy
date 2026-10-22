@@ -6,7 +6,6 @@ export const RoleDropdown = ({ value, onChange, includeAllOption = false, classN
     { label: 'Elderly', value: 'Elderly' },
     { label: 'Caregiver', value: 'Caregiver' },
     { label: 'Doctor', value: 'Doctor' },
-    { label: 'Family Member', value: 'Family Member' },
   ];
 
   return (

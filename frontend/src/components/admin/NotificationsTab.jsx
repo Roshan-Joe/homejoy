@@ -146,7 +146,6 @@ export const NotificationsTab = () => {
                 <option value="all">Everyone (All Users)</option>
                 <option value="Elderly">Senior Residents (Elderly)</option>
                 <option value="Caregiver">Caregivers & Nurses</option>
-                <option value="Family Member">Family Members</option>
               </select>
             </div>
 

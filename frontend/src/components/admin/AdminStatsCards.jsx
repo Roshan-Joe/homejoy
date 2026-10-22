@@ -54,42 +54,44 @@ export const AdminStatsCards = ({ stats, loading, onNavigateTab }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px' }}>
         {statItems.map((item, idx) => {
           const IconComp = item.icon;
           return (
             <div
               key={idx}
-              className="card card-hover animate-fade-in"
+              className="pastel-card animate-fade-in"
               onClick={() => onNavigateTab && onNavigateTab(item.tab)}
               style={{
-                padding: '20px 22px',
+                padding: '22px 24px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between'
+                justifyContent: 'space-between',
+                border: '1px solid rgba(226, 232, 240, 0.8)'
               }}
             >
               <div>
-                <span style={{ fontSize: '0.785rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <span style={{ fontSize: '0.785rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   {item.title}
                 </span>
-                <div style={{ fontSize: '1.9rem', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+                <div style={{ fontSize: '2.1rem', fontWeight: 800, marginTop: '4px', color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
                   {item.value}
                 </div>
               </div>
               <div style={{
-                width: '48px',
-                height: '48px',
-                borderRadius: 'var(--radius-md)',
+                width: '52px',
+                height: '52px',
+                borderRadius: '16px',
                 background: item.bg,
                 color: item.color,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                flexShrink: 0
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.04)'
               }}>
-                <IconComp size={24} />
+                <IconComp size={26} />
               </div>
             </div>
           );
@@ -139,7 +141,7 @@ export const AdminStatsCards = ({ stats, loading, onNavigateTab }) => {
                 <tbody>
                   {stats.recent_users.map((u) => {
                     const roleLower = (u.role || '').toLowerCase();
-                    let roleBadgeClass = 'badge-role-family';
+                    let roleBadgeClass = 'badge-role-elderly';
                     if (roleLower === 'elderly') roleBadgeClass = 'badge-role-elderly';
                     if (roleLower === 'caregiver') roleBadgeClass = 'badge-role-caregiver';
                     if (roleLower === 'admin') roleBadgeClass = 'badge-role-admin';

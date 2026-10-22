@@ -22,7 +22,7 @@ caregivers_collection = db["caregiver_profiles"]
 daily_reports_collection = db["daily_reports"]
 doctors_collection = db["doctor_profiles"]
 medical_notes_collection = db["medical_notes"]
-family_collection = db["family_profiles"]
+family_collection = db["family_profiles"]  # Retained for legacy data migration only (see backend/scripts/migrate_family_to_guardian.py)
 
 # --- Elderly Client Module Collections ---
 medications_collection = db["medications"]

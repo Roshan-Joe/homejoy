@@ -20,10 +20,6 @@ export const RoleCard = ({ role, onManagePermissions, onChangeUserRoles }) => {
     headerBg = 'linear-gradient(135deg, #9333ea 0%, #6b21a8 100%)';
     badgeColor = '#6b21a8';
     badgeBg = '#f3e8ff';
-  } else if (roleLower === 'family member' || roleLower === 'family') {
-    headerBg = 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)';
-    badgeColor = '#c2410c';
-    badgeBg = '#ffedd5';
   } else if (roleLower === 'admin') {
     headerBg = 'linear-gradient(135deg, #d97706 0%, #b45309 100%)';
     badgeColor = '#b45309';

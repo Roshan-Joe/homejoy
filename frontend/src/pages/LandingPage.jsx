@@ -1,41 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  HeartPulse, 
-  PhoneCall, 
+  Heart, 
+  Activity, 
+  Shield, 
   Check, 
-  Play, 
-  X, 
-  ShieldCheck, 
-  HeartHandshake, 
-  Smile, 
+  ArrowRight, 
   Clock, 
   Pill, 
-  Sparkles, 
-  ArrowRight, 
-  ChevronRight, 
+  Bell, 
   Users, 
-  BrainCircuit, 
-  Activity,
-  Bed,
-  Home,
-  Shield,
-  Send,
-  CheckCircle2,
-  ChevronLeft,
-  Lock,
-  FileText
+  ShieldCheck, 
+  CheckCircle2, 
+  X, 
+  PhoneCall, 
+  Play
 } from 'lucide-react';
 
-import newHeroImg from '../assets/homejoy_new_hero.png';
 import newCaregiverImg from '../assets/homejoy_new_caregiver.png';
 import newSeniorLivingImg from '../assets/homejoy_new_senior_living.png';
 import newAppPreviewImg from '../assets/homejoy_new_app_preview.png';
 
 export const LandingPage = ({ onRequestQuote, isQuoteModalOpen, setIsQuoteModalOpen }) => {
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [activeTheme, setActiveTheme] = useState('coral');
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [contactForm, setContactForm] = useState({
     name: '',
@@ -52,33 +38,6 @@ export const LandingPage = ({ onRequestQuote, isQuoteModalOpen, setIsQuoteModalO
     message: ''
   });
   const [quoteSubmitted, setQuoteSubmitted] = useState(false);
-
-  useEffect(() => {
-    document.body.setAttribute('data-carer-theme', activeTheme);
-  }, [activeTheme]);
-
-  const slides = [
-    {
-      title: "Daily Wellness Monitoring & Early Risk Triage for Seniors",
-      sub: "HomeJoy connects elderly residents, caregivers, and doctors in one simple, reassuring system. Early detection helps care teams respond before minor symptoms become health emergencies.",
-      tag: "COMPASSIONATE SENIOR CARE & MONITORING",
-      img: newHeroImg
-    },
-    {
-      title: "Reassuring Support for Seniors, Actionable Triage for Care Teams",
-      sub: "Track daily check-ins, vital signs, medication schedules, and machine learning risk predictions with clear, accessible controls for every user role.",
-      tag: "AI-BASED ELDERLY WELLNESS SYSTEM",
-      img: newSeniorLivingImg
-    }
-  ];
-
-  const handleNextSlide = () => {
-    setActiveSlide((prev) => (prev + 1) % slides.length);
-  };
-
-  const handlePrevSlide = () => {
-    setActiveSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  };
 
   const handleContactSubmit = (e) => {
     e.preventDefault();
@@ -100,367 +59,755 @@ export const LandingPage = ({ onRequestQuote, isQuoteModalOpen, setIsQuoteModalO
   };
 
   return (
-    <div className="animate-fade-in" style={{ paddingBottom: '60px' }}>
+    <div className="landing-container" style={{
+      backgroundColor: '#f7f9f8',
+      color: '#0b1f28',
+      fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+      minHeight: '100vh'
+    }}>
       
-      {/* Floating Theme Palette Switcher */}
-      <div className="carer-floating-palette" title="Try color themes">
-        <span className="carer-palette-title">COLOR PALETTE</span>
-        <button className="carer-color-dot" style={{ background: '#f05654' }} onClick={() => setActiveTheme('coral')} title="Coral Red Theme" />
-        <button className="carer-color-dot" style={{ background: '#0d9488' }} onClick={() => setActiveTheme('teal')} title="Emerald Teal Theme" />
-        <button className="carer-color-dot" style={{ background: '#1e293b' }} onClick={() => setActiveTheme('navy')} title="Deep Navy Theme" />
-        <button className="carer-color-dot" style={{ background: '#f97316' }} onClick={() => setActiveTheme('orange')} title="Sunset Orange Theme" />
-        <button className="carer-color-dot" style={{ background: '#16a34a' }} onClick={() => setActiveTheme('green')} title="Fresh Green Theme" />
-      </div>
+      {/* HERO SECTION */}
+      <section style={{
+        padding: '60px 0 80px 0',
+        background: 'radial-gradient(circle at 10% 20%, rgba(220, 245, 238, 0.4) 0%, rgba(247, 249, 248, 1) 80%)'
+      }}>
+        <div className="container" style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '48px',
+          alignItems: 'center'
+        }}>
+          {/* Left Column: Hero Copy */}
+          <div>
+            {/* Pill Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: '#e6f4f1',
+              border: '1px solid #b2e0d8',
+              borderRadius: '9999px',
+              padding: '6px 16px',
+              marginBottom: '24px'
+            }}>
+              <Activity size={16} style={{ color: '#00685b' }} />
+              <span style={{
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                color: '#00685b',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase'
+              }}>
+                CALM CARE, CLEARER DAYS
+              </span>
+            </div>
 
-      {/* HERO SECTION WITH NEW HERO BACKGROUND */}
-      <section className="carer-hero-slider" style={{ backgroundImage: `url(${slides[activeSlide].img})` }}>
-        <div className="carer-hero-overlay" />
-        <div className="carer-triangle-bg" />
+            <h1 style={{
+              fontSize: 'clamp(2.4rem, 5vw, 3.4rem)',
+              fontWeight: 800,
+              lineHeight: 1.15,
+              letterSpacing: '-0.03em',
+              color: '#0b1f28',
+              marginBottom: '20px'
+            }}>
+              Daily wellness care that keeps everyone <span style={{ color: '#00685b' }}>in the picture.</span>
+            </h1>
 
-        <button className="carer-slider-arrow left" onClick={handlePrevSlide} aria-label="Previous Slide">
-          <ChevronLeft size={24} />
-        </button>
-        <button className="carer-slider-arrow right" onClick={handleNextSlide} aria-label="Next Slide">
-          <ChevronRight size={24} />
-        </button>
+            <p style={{
+              fontSize: '1.15rem',
+              lineHeight: 1.6,
+              color: '#4a6068',
+              marginBottom: '32px',
+              maxWidth: '540px'
+            }}>
+              One gentle check-in turns everyday signals into a clear wellness picture for older people, families and care teams.
+            </p>
 
-        <div className="carer-hero-content">
-          <span className="carer-subtitle-tag underlined" style={{ color: '#ffffff', fontSize: '0.95rem' }}>
-            {slides[activeSlide].tag}
-          </span>
+            {/* CTAs */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: '32px' }}>
+              <Link to="/register" style={{
+                backgroundColor: '#00685b',
+                color: '#ffffff',
+                fontSize: '1.05rem',
+                fontWeight: 700,
+                padding: '14px 28px',
+                borderRadius: '9999px',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                boxShadow: '0 4px 16px rgba(0, 104, 91, 0.28)',
+                transition: 'all 0.2s'
+              }}>
+                <span>Start with HomeJoy</span>
+                <ArrowRight size={18} />
+              </Link>
 
-          <h1 className="carer-hero-title">
-            {slides[activeSlide].title}
-          </h1>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '0.92rem',
+                fontWeight: 600,
+                color: '#4a6068'
+              }}>
+                <Shield size={18} style={{ color: '#00685b' }} />
+                <span>Private by design</span>
+              </div>
+            </div>
 
-          <p className="carer-hero-sub">
-            {slides[activeSlide].sub}
-          </p>
+            {/* Micro Feature Bullets */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '20px',
+              flexWrap: 'wrap',
+              fontSize: '0.88rem',
+              fontWeight: 600,
+              color: '#0b1f28'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Check size={16} style={{ color: '#00685b' }} />
+                <span>One-minute check-in</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Check size={16} style={{ color: '#00685b' }} />
+                <span>Personal baseline</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Check size={16} style={{ color: '#00685b' }} />
+                <span>Clear care alerts</span>
+              </div>
+            </div>
 
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <Link to="/register" className="carer-btn-coral">
-              <span>REGISTER NOW</span>
-            </Link>
-
-            <Link to="/login" className="btn btn-secondary btn-lg" style={{ borderRadius: '4px', padding: '14px 28px', fontWeight: 800, background: '#ffffff', color: '#0f172a' }}>
-              <span>SIGN IN TO PORTAL</span>
-            </Link>
-
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginLeft: '12px' }}>
-              <Link to="/login" className="badge badge-role-elderly" style={{ padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700 }}>
+            {/* Quick Role Portal Links */}
+            <div style={{
+              marginTop: '32px',
+              paddingTop: '24px',
+              borderTop: '1px solid #e2e8f0',
+              display: 'flex',
+              gap: '10px',
+              flexWrap: 'wrap'
+            }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#4a6068', textTransform: 'uppercase', letterSpacing: '0.04em', width: '100%', marginBottom: '4px' }}>
+                Explore Portals
+              </span>
+              <Link to="/login" style={{
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#0b1f28',
+                textDecoration: 'none'
+              }}>
                 👵 Elderly Portal
               </Link>
-              <Link to="/login" className="badge badge-role-caregiver" style={{ padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700 }}>
+              <Link to="/login" style={{
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#0b1f28',
+                textDecoration: 'none'
+              }}>
                 👩‍⚕️ Caregiver Triage
               </Link>
-              <Link to="/login" className="badge badge-role-admin" style={{ padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700 }}>
-                🩺 Doctor Console
+              <Link to="/login" style={{
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e2e8f0',
+                fontSize: '0.82rem',
+                fontWeight: 600,
+                color: '#0b1f28',
+                textDecoration: 'none'
+              }}>
+                🩺 Admin Console
               </Link>
             </div>
           </div>
+
+          {/* Right Column: Reference Style Interactive Mockup Card */}
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '24px',
+              padding: '28px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 20px 40px -10px rgba(0, 50, 40, 0.08), 0 2px 6px rgba(0, 0, 0, 0.02)'
+            }}>
+              {/* Card Window Top Header */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '24px',
+                paddingBottom: '14px',
+                borderBottom: '1px solid #f1f5f9'
+              }}>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f87171' }} />
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#fbbf24' }} />
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#34d399' }} />
+                </div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#4a6068', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  TODAY · 08:42
+                </span>
+              </div>
+
+              {/* Resident Greeting Banner */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                marginBottom: '24px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.9rem', color: '#4a6068', fontWeight: 500 }}>Good morning, Anita</div>
+                  <h3 style={{ fontSize: '1.45rem', fontWeight: 800, color: '#0b1f28', marginTop: '2px' }}>
+                    Your daily picture
+                  </h3>
+                </div>
+
+                <div style={{
+                  backgroundColor: '#dcfce7',
+                  color: '#15803d',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  padding: '6px 14px',
+                  borderRadius: '9999px',
+                  letterSpacing: '0.04em'
+                }}>
+                  LOW RISK
+                </div>
+              </div>
+
+              {/* 3 Metric Cards Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                marginBottom: '24px'
+              }}>
+                <div style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '16px',
+                  padding: '16px 12px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0b1f28' }}>124/78</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4a6068', marginTop: '4px' }}>Blood pressure</div>
+                </div>
+
+                <div style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '16px',
+                  padding: '16px 12px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0b1f28' }}>98%</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4a6068', marginTop: '4px' }}>Oxygen</div>
+                </div>
+
+                <div style={{
+                  backgroundColor: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '16px',
+                  padding: '16px 12px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0b1f28' }}>3/3</div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#4a6068', marginTop: '4px' }}>Medicines</div>
+                </div>
+              </div>
+
+              {/* Check-in Banner */}
+              <div style={{
+                backgroundColor: '#00685b',
+                color: '#ffffff',
+                borderRadius: '16px',
+                padding: '18px 20px'
+              }}>
+                <div style={{ fontSize: '0.92rem', fontWeight: 700, marginBottom: '4px' }}>Check-in complete</div>
+                <div style={{ fontSize: '0.84rem', opacity: 0.9, lineHeight: 1.4 }}>
+                  Sleep and appetite match your usual pattern.
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS SECTION */}
-      <section className="carer-section-padding" style={{ background: '#ffffff' }}>
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <span className="carer-subtitle-tag">HOW HOMEJOY WORKS</span>
-          <h2 className="carer-heading-main" style={{ margin: '0 auto', maxWidth: '720px' }}>
-            Designed for the Real People in the Care Circle
-          </h2>
-          <p style={{ color: '#64748b', fontSize: '1.05rem', maxWidth: '640px', margin: '12px auto 0' }}>
-            Whether you are a senior logging how you feel, a caregiver prioritizing your shift, or an administrator coordinating care.
-          </p>
-        </div>
-
-        <div className="carer-grid-2col" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
-          {/* For Elderly */}
-          <div className="card" style={{ padding: '32px 28px', borderRadius: '16px', border: '1.5px solid #e2e8f0', background: '#f8fafc' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#f0fdfa', color: '#0d9488', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-              <Smile size={28} />
+      {/* FEATURE GRID SECTION: "THE RIGHT SIGNAL, FOR THE RIGHT PERSON" */}
+      <section id="features" style={{ padding: '80px 0', backgroundColor: '#ffffff' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              backgroundColor: '#e6f4f1',
+              border: '1px solid #b2e0d8',
+              borderRadius: '9999px',
+              padding: '6px 16px',
+              marginBottom: '16px'
+            }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#00685b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                ONE CONNECTED CARE RHYTHM
+              </span>
             </div>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', marginBottom: '10px' }}>
-              For Seniors & Elderly Clients
-            </h3>
-            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '18px' }}>
-              Complete a simple 1-minute morning check-in on a screen built with large buttons and clear text. Record your mood, sleep quality, pain level, and appetite without tech stress.
-            </p>
-            <ul className="carer-checklist" style={{ margin: 0 }}>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> 1-Tap daily health check-in</li>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Medication schedule alarms</li>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Emergency dial to assigned caregiver</li>
-            </ul>
-          </div>
-
-          {/* For Caregivers */}
-          <div className="card" style={{ padding: '32px 28px', borderRadius: '16px', border: '1.5px solid #e2e8f0', background: '#f8fafc' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#f0f9ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-              <HeartHandshake size={28} />
-            </div>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', marginBottom: '10px' }}>
-              For Caregivers & Nurses
-            </h3>
-            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '18px' }}>
-              See a prioritized list of assigned residents flagged with High, Moderate, or Low wellness risk. Focus your time where care is needed most and log shift notes instantly.
-            </p>
-            <ul className="carer-checklist" style={{ margin: 0 }}>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Priority risk badges (High / Moderate)</li>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Resident check-in history timeline</li>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Direct doctor assignment links</li>
-            </ul>
-          </div>
-
-          {/* For Admins & Doctors */}
-          <div className="card" style={{ padding: '32px 28px', borderRadius: '16px', border: '1.5px solid #e2e8f0', background: '#f8fafc' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#f5f3ff', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-              <ShieldCheck size={28} />
-            </div>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0f172a', marginBottom: '10px' }}>
-              For Admins & Physicians
-            </h3>
-            <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '18px' }}>
-              Manage resident-caregiver pairings, assign primary physicians, monitor facility-wide health analytics, and control user roles with complete data security.
-            </p>
-            <ul className="carer-checklist" style={{ margin: 0 }}>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Resident & Caregiver pairing tools</li>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Role permission management</li>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Facility-wide wellness trends</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* SERVICES SECTION WITH NEW CAREGIVER IMAGE */}
-      <section id="services-section" className="carer-section-padding" style={{ background: '#f8fafc' }}>
-        <div className="carer-grid-2col">
-          <div>
-            <span className="carer-subtitle-tag">SERVICES OVERVIEW</span>
-            <h2 className="carer-heading-main">
-              Everything Needed for Early Detection and Daily Care
+            <h2 style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', fontWeight: 800, color: '#0b1f28', letterSpacing: '-0.02em' }}>
+              The right signal, for the right person.
             </h2>
-            <p style={{ color: '#64748b', fontSize: '1.02rem', lineHeight: 1.6, marginBottom: '24px' }}>
-              HomeJoy brings together daily health questions, prescription reminders, AI risk models, and direct caregiver communication into a unified platform.
-            </p>
-
-            <div className="carer-feature-boxes">
-              <div className="carer-service-box">
-                <div className="carer-box-icon"><Bed size={24} /></div>
-                <div>
-                  <div className="carer-box-title">Daily Wellness Log</div>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b' }}>Mood, Pain, Sleep, Appetite</div>
-                </div>
-              </div>
-              <div className="carer-service-box">
-                <div className="carer-box-icon"><PhoneCall size={24} /></div>
-                <div>
-                  <div className="carer-box-title">24/7 Care Escalation</div>
-                  <div style={{ fontSize: '0.82rem', color: '#64748b' }}>Instant SOS Alert Trigger</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="carer-progress-wrapper">
-              <div className="carer-progress-header">
-                <span>Senior Residence Satisfaction</span>
-                <span>86%</span>
-              </div>
-              <div className="carer-progress-track">
-                <div className="carer-progress-fill" style={{ width: '86%' }} />
-              </div>
-            </div>
-
-            <ul className="carer-checklist">
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Supporting Seniors with Compassion and Expertise</li>
-              <li className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Actionable Risk Triage for Care Coordinators</li>
-            </ul>
-
-            <a href="#about-section" className="carer-btn-coral">READ MORE</a>
           </div>
 
-          <div className="carer-media-stack">
-            <img src={newCaregiverImg} alt="Nurse checking vital signs on tablet with senior" className="carer-media-main-img" style={{ borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }} />
-            <button className="carer-video-play-btn" onClick={() => setIsVideoModalOpen(true)} aria-label="Play Overview Video">
-              <Play size={28} style={{ marginLeft: '4px', fill: 'currentColor' }} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ABOUT & TRUST SECTION WITH NEW SENIOR LIVING IMAGE */}
-      <section id="about-section" style={{ background: '#ffffff', padding: '80px 0', position: 'relative' }}>
-        <div className="carer-section-padding" style={{ padding: 0 }}>
-          <div className="carer-grid-2col">
-            <div className="carer-media-stack">
-              <img src={newSeniorLivingImg} alt="Senior couple in sunlit garden" className="carer-media-main-img" style={{ borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.12)' }} />
-            </div>
-
-            <div>
-              <span className="carer-subtitle-tag">DATA PRIVACY & CLINICAL TRUST</span>
-              <h2 className="carer-heading-main">
-                Built on Trust, Privacy, and Responsible Data Handling
-              </h2>
-
-              <p style={{ color: '#64748b', fontSize: '1.02rem', lineHeight: 1.6, marginBottom: '24px' }}>
-                Health information demands strict confidentiality. HomeJoy enforces role-based authorization to ensure seniors, family members, caregivers, and physicians only access data relevant to their role.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
-                <div className="carer-check-item"><div className="carer-check-icon"><Lock size={14} /></div> Role-based data access</div>
-                <div className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Encrypted health check-ins</div>
-                <div className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Audit-ready caregiver logs</div>
-                <div className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Non-diagnostic AI risk triage</div>
-                <div className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> 24/7 Emergency Dialing</div>
-                <div className="carer-check-item"><div className="carer-check-icon"><Check size={14} /></div> Direct Doctor Escalations</div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                <a href="#contact-section" className="carer-btn-coral">CONTACT CARE TEAM</a>
-                <div className="carer-founder-spotlight">
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--carer-primary)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.1rem' }}>JM</div>
-                  <div>
-                    <div className="carer-founder-name">Jon Martin</div>
-                    <div className="carer-founder-role">Co-Founder & Care Lead</div>
+          {/* 6 Feature Cards Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '24px'
+          }}>
+            {/* Card 1 */}
+            <div style={{
+              backgroundColor: '#f7f9f8',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              position: 'relative'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: '#e6f4f1',
+                    color: '#00685b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <CheckCircle2 size={22} />
                   </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>01</span>
                 </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0b1f28', marginBottom: '10px' }}>
+                  A one-minute check-in
+                </h3>
+                <p style={{ fontSize: '0.92rem', color: '#4a6068', lineHeight: 1.6 }}>
+                  Six friendly questions about sleep, appetite, movement, mood, medicines and pain. Big buttons, no typing needed.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2 */}
+            <div style={{
+              backgroundColor: '#f7f9f8',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: '#e6f4f1',
+                    color: '#00685b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Activity size={22} />
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>02</span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0b1f28', marginBottom: '10px' }}>
+                  Blood pressure & oxygen
+                </h3>
+                <p style={{ fontSize: '0.92rem', color: '#4a6068', lineHeight: 1.6 }}>
+                  Simple entry for readings taken at home. Today's numbers stay visible for the person and their caregiver.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 3 */}
+            <div style={{
+              backgroundColor: '#f7f9f8',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: '#e6f4f1',
+                    color: '#00685b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Heart size={22} />
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>03</span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0b1f28', marginBottom: '10px' }}>
+                  Wellness risk indicator
+                </h3>
+                <p style={{ fontSize: '0.92rem', color: '#4a6068', lineHeight: 1.6 }}>
+                  Each person is compared with their own usual pattern — never with other people — and the reasons are always shown.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 4 */}
+            <div style={{
+              backgroundColor: '#f7f9f8',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: '#e6f4f1',
+                    color: '#00685b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Bell size={22} />
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>04</span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0b1f28', marginBottom: '10px' }}>
+                  Help at one press
+                </h3>
+                <p style={{ fontSize: '0.92rem', color: '#4a6068', lineHeight: 1.6 }}>
+                  A large Request Help button reaches only the assigned caregiver, who sees it immediately.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 5 */}
+            <div style={{
+              backgroundColor: '#f7f9f8',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: '#e6f4f1',
+                    color: '#00685b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Users size={22} />
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>05</span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0b1f28', marginBottom: '10px' }}>
+                  Everyone in their own lane
+                </h3>
+                <p style={{ fontSize: '0.92rem', color: '#4a6068', lineHeight: 1.6 }}>
+                  Caregivers see only the residents assigned to them, while guardians receive comprehensive daily reports. Admin manages all permissions.
+                </p>
+              </div>
+            </div>
+
+            {/* Card 6 */}
+            <div style={{
+              backgroundColor: '#f7f9f8',
+              border: '1px solid #e2e8f0',
+              borderRadius: '20px',
+              padding: '28px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                  <div style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: '#e6f4f1',
+                    color: '#00685b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <ShieldCheck size={22} />
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#94a3b8' }}>06</span>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0b1f28', marginBottom: '10px' }}>
+                  Careful by design
+                </h3>
+                <p style={{ fontSize: '0.92rem', color: '#4a6068', lineHeight: 1.6 }}>
+                  Missing information is shown as missing, never assumed to be fine. HomeJoy supports decisions, it does not diagnose.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CONTACT & GET IN TOUCH WITH NEW APP PREVIEW IMAGE */}
-      <section id="contact-section" className="carer-contact-section-bg">
-        <div className="carer-section-padding" style={{ padding: 0 }}>
-          <div className="carer-grid-2col">
-            <div className="carer-contact-card">
-              <span className="carer-subtitle-tag">GET IN TOUCH</span>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0f172a', marginBottom: '24px' }}>
-                Write Email
+      {/* CONTACT & CONSULTATION SECTION */}
+      <section style={{ padding: '80px 0', backgroundColor: '#f7f9f8', borderTop: '1px solid #e2e8f0' }}>
+        <div className="container">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '40px',
+            alignItems: 'center'
+          }}>
+            {/* Contact Form */}
+            <div style={{
+              backgroundColor: '#ffffff',
+              borderRadius: '24px',
+              padding: '32px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 10px 30px -5px rgba(0,0,0,0.04)'
+            }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#00685b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                GET IN TOUCH
+              </span>
+              <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0b1f28', margin: '6px 0 20px 0' }}>
+                Send Us a Message
               </h3>
 
               {contactSubmitted ? (
-                <div style={{ padding: '20px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', color: '#16a34a', fontWeight: 700 }}>
+                <div style={{ padding: '20px', backgroundColor: '#dcfce7', borderRadius: '12px', color: '#15803d', fontWeight: 700 }}>
                   <CheckCircle2 size={24} style={{ marginBottom: '8px' }} />
-                  Thank you! Your message has been sent successfully. Our care team will respond shortly.
+                  Thank you! Your message has been sent successfully.
                 </div>
               ) : (
-                <form onSubmit={handleContactSubmit}>
-                  <div className="carer-form-group">
-                    <input type="text" className="carer-input-field" placeholder="Your Name" required value={contactForm.name} onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })} />
-                  </div>
-                  <div className="carer-form-group">
-                    <input type="email" className="carer-input-field" placeholder="Email Address" required value={contactForm.email} onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} />
-                  </div>
-                  <div className="carer-form-group">
-                    <input type="tel" className="carer-input-field" placeholder="Phone Number" required value={contactForm.phone} onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })} />
-                  </div>
-                  <div className="carer-form-group">
-                    <textarea className="carer-input-field" rows="4" placeholder="Write a Message" required value={contactForm.message} onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })} />
-                  </div>
-                  <button type="submit" className="carer-btn-coral" style={{ width: '100%', borderRadius: '8px' }}>
-                    SEND A MESSAGE
+                <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    required
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      backgroundColor: '#f8fafc'
+                    }}
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    required
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      backgroundColor: '#f8fafc'
+                    }}
+                  />
+                  <textarea
+                    rows={3}
+                    placeholder="How can we help you?"
+                    required
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '0.95rem',
+                      outline: 'none',
+                      backgroundColor: '#f8fafc'
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    style={{
+                      backgroundColor: '#00685b',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      padding: '12px 24px',
+                      borderRadius: '9999px',
+                      fontSize: '0.95rem',
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Send Message
                   </button>
                 </form>
               )}
             </div>
 
+            {/* Media Image & App Overview */}
             <div>
-              <span className="carer-subtitle-tag">SENIOR CARE EXPERIENCE</span>
-              <h2 className="carer-heading-main">A Reassuring Home Environment</h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', margin: '32px 0' }}>
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                  <div className="carer-box-icon" style={{ width: '56px', height: '56px' }}><Shield size={28} /></div>
-                  <div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', marginBottom: '6px' }}>Safety & Security Assurance</h3>
-                    <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: 1.5 }}>Continuous AI risk tracking and verified check-in dispatching for complete senior safety.</p>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                  <div className="carer-box-icon" style={{ width: '56px', height: '56px' }}><Home size={28} /></div>
-                  <div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', marginBottom: '6px' }}>Comfortable Independent Living</h3>
-                    <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: 1.5 }}>Promoting resident autonomy, daily wellness engagement, and connection with loved ones.</p>
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.1)' }}>
-                <img src={newAppPreviewImg} alt="Senior woman and caregiver using smartphone app" style={{ width: '100%', height: 'auto', display: 'block' }} />
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#00685b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                SENIOR LIVING & COMMUNITY
+              </span>
+              <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0b1f28', margin: '6px 0 16px 0' }}>
+                A Reassuring Environment for Everyone
+              </h2>
+              <p style={{ fontSize: '1rem', color: '#4a6068', lineHeight: 1.6, marginBottom: '24px' }}>
+                Promoting independence, daily wellness connection, and peace of mind for families across every stage of care.
+              </p>
+              <div style={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 12px 30px rgba(0,0,0,0.06)' }}>
+                <img src={newAppPreviewImg} alt="Senior woman using HomeJoy" style={{ width: '100%', height: 'auto', display: 'block' }} />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* VIDEO OVERVIEW MODAL */}
-      {isVideoModalOpen && (
-        <div className="carer-modal-backdrop" onClick={() => setIsVideoModalOpen(false)}>
-          <div className="carer-modal-card" onClick={(e) => e.stopPropagation()}>
-            <button className="carer-modal-close" onClick={() => setIsVideoModalOpen(false)}>
-              <X size={20} />
-            </button>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '16px' }}>
-              HomeJoy Platform Overview
-            </h3>
-            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', background: '#0f172a', marginBottom: '20px' }}>
-              <iframe 
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1" 
-                title="HomeJoy Demonstration"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-            <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
-              See how HomeJoy unifies daily health check-ins, caregiver triage, and clinical escalation to protect elderly health every day.
-            </p>
-          </div>
+      {/* FOOTER DISCLAIMER */}
+      <footer id="disclaimer" style={{
+        padding: '32px 0',
+        backgroundColor: '#ffffff',
+        borderTop: '1px solid #e2e8f0',
+        fontSize: '0.88rem',
+        color: '#4a6068',
+        textAlign: 'center'
+      }}>
+        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+          <Shield size={16} style={{ color: '#00685b', flexShrink: 0 }} />
+          <span>HomeJoy supports wellness decisions. It does not diagnose illness or replace medical advice.</span>
         </div>
-      )}
+      </footer>
 
       {/* REQUEST QUOTE MODAL */}
       {isQuoteModalOpen && (
-        <div className="carer-modal-backdrop" onClick={() => setIsQuoteModalOpen(false)}>
-          <div className="carer-modal-card" onClick={(e) => e.stopPropagation()}>
-            <button className="carer-modal-close" onClick={() => setIsQuoteModalOpen(false)}>
-              <X size={20} />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(11, 31, 40, 0.5)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px'
+        }} onClick={() => setIsQuoteModalOpen(false)}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            borderRadius: '24px',
+            padding: '32px',
+            maxWidth: '480px',
+            width: '100%',
+            position: 'relative'
+          }} onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setIsQuoteModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                border: 'none',
+                background: '#f1f5f9',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <X size={18} />
             </button>
-            <span className="carer-subtitle-tag">FREE CARE CONSULTATION</span>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a', marginBottom: '20px' }}>
-              Request A Care Quote
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0b1f28', marginBottom: '16px' }}>
+              Request Care Consultation
             </h3>
 
             {quoteSubmitted ? (
-              <div style={{ padding: '24px', background: '#f0fdf4', borderRadius: '12px', color: '#16a34a', fontWeight: 700, textAlign: 'center' }}>
-                <CheckCircle2 size={36} style={{ margin: '0 auto 12px' }} />
-                Your request has been received! A care coordinator will contact you shortly.
+              <div style={{ padding: '20px', backgroundColor: '#dcfce7', borderRadius: '12px', color: '#15803d', fontWeight: 700, textAlign: 'center' }}>
+                <CheckCircle2 size={32} style={{ margin: '0 auto 8px' }} />
+                Your request has been received! We will be in touch shortly.
               </div>
             ) : (
-              <form onSubmit={handleQuoteSubmit}>
-                <div className="carer-form-group">
-                  <input type="text" className="carer-input-field" placeholder="Full Name" required value={quoteForm.name} onChange={(e) => setQuoteForm({ ...quoteForm, name: e.target.value })} />
-                </div>
-                <div className="carer-form-group">
-                  <input type="email" className="carer-input-field" placeholder="Email Address" required value={quoteForm.email} onChange={(e) => setQuoteForm({ ...quoteForm, email: e.target.value })} />
-                </div>
-                <div className="carer-form-group">
-                  <input type="tel" className="carer-input-field" placeholder="Phone Number" required value={quoteForm.phone} onChange={(e) => setQuoteForm({ ...quoteForm, phone: e.target.value })} />
-                </div>
-                <div className="carer-form-group">
-                  <select className="carer-input-field" value={quoteForm.careType} onChange={(e) => setQuoteForm({ ...quoteForm, careType: e.target.value })}>
-                    <option value="residential">Residential Elder Care</option>
-                    <option value="emergency">24/7 Emergency Risk Triage</option>
-                    <option value="medication">Medication & Vital Tracking</option>
-                    <option value="physician">On-Site Physician Services</option>
-                  </select>
-                </div>
-                <div className="carer-form-group">
-                  <textarea className="carer-input-field" rows="3" placeholder="Describe your care needs..." value={quoteForm.message} onChange={(e) => setQuoteForm({ ...quoteForm, message: e.target.value })} />
-                </div>
-                <button type="submit" className="carer-btn-coral" style={{ width: '100%', borderRadius: '8px' }}>
-                  SUBMIT QUOTE REQUEST
+              <form onSubmit={handleQuoteSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  required
+                  value={quoteForm.name}
+                  onChange={(e) => setQuoteForm({ ...quoteForm, name: e.target.value })}
+                  style={{ padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.95rem' }}
+                />
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  required
+                  value={quoteForm.email}
+                  onChange={(e) => setQuoteForm({ ...quoteForm, email: e.target.value })}
+                  style={{ padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.95rem' }}
+                />
+                <select
+                  value={quoteForm.careType}
+                  onChange={(e) => setQuoteForm({ ...quoteForm, careType: e.target.value })}
+                  style={{ padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.95rem' }}
+                >
+                  <option value="residential">Residential Elder Care</option>
+                  <option value="emergency">Emergency Risk Triage</option>
+                  <option value="medication">Medication & Vital Tracking</option>
+                </select>
+                <button
+                  type="submit"
+                  style={{
+                    backgroundColor: '#00685b',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    padding: '12px',
+                    borderRadius: '9999px',
+                    border: 'none',
+                    marginTop: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Submit Request
                 </button>
               </form>
             )}
@@ -473,4 +820,3 @@ export const LandingPage = ({ onRequestQuote, isQuoteModalOpen, setIsQuoteModalO
 };
 
 export default LandingPage;
-

@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/users", tags=["User Management"])
 @router.get("", response_model=UserPaginatedResponseSchema)
 def get_users(
     search: Optional[str] = Query(None, description="Search by name, email, or phone"),
-    role: Optional[str] = Query(None, description="Filter by role (Admin, Elderly, Caregiver, Doctor, Family Member)"),
+    role: Optional[str] = Query(None, description="Filter by role (Admin, Elderly, Caregiver, Doctor)"),
     status: Optional[str] = Query(None, description="Filter by status (active, inactive)"),
     sort_by: Optional[str] = Query("createdAt", description="Sort by field (name, createdAt, role, status)"),
     sort_order: Optional[str] = Query("desc", description="Sort order (asc, desc)"),

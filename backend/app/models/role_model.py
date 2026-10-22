@@ -8,7 +8,7 @@ DEFAULT_SYSTEM_ROLES = [
         "is_system_role": True,
         "permissions": [
             "users:manage", "roles:manage", "elderly:manage", "caregivers:manage",
-            "doctors:manage", "family:manage", "health:manage", "appointments:manage",
+            "doctors:manage", "health:manage", "appointments:manage",
             "emergencies:manage", "notifications:manage", "ai:view", "reports:manage",
             "settings:manage", "audit:view"
         ]
@@ -39,15 +39,6 @@ DEFAULT_SYSTEM_ROLES = [
             "assigned_patients:read_write", "medical_notes:read_write", "prescriptions:manage",
             "appointments:manage", "ai_predictions:read"
         ]
-    },
-    {
-        "role_name": "Family Member",
-        "description": "Family relative access for linked elderly health monitoring, emergency alert notifications, and summary reports.",
-        "is_system_role": True,
-        "permissions": [
-            "linked_elderly:read", "health_summary:read", "notifications:read",
-            "emergency_alerts:read", "contact:update"
-        ]
     }
 ]
 
@@ -60,7 +51,6 @@ ALL_AVAILABLE_PERMISSIONS = [
     {"key": "elderly:manage", "label": "Elderly Profile & Record Management", "category": "Care & Health"},
     {"key": "caregivers:manage", "label": "Caregiver Assignments & Reviews", "category": "Care & Health"},
     {"key": "doctors:manage", "label": "Doctor Appointments & Clinical Notes", "category": "Care & Health"},
-    {"key": "family:manage", "label": "Family Member Connections", "category": "Care & Health"},
     {"key": "health:manage", "label": "Health Monitoring & Vital Logs", "category": "Care & Health"},
 
     {"key": "appointments:manage", "label": "Appointment Scheduling & Status", "category": "Operations"},

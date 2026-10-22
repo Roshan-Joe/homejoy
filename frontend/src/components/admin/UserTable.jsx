@@ -15,7 +15,7 @@ export const UserTable = ({
 }) => {
   const getRoleBadge = (roleStr) => {
     const roleLower = (roleStr || '').toLowerCase();
-    let badgeClass = 'badge-role-family';
+    let badgeClass = 'badge-role-elderly';
 
     if (roleLower === 'elderly') badgeClass = 'badge-role-elderly';
     else if (roleLower === 'caregiver') badgeClass = 'badge-role-caregiver';

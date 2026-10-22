@@ -29,35 +29,8 @@ def serialize_user(user: dict) -> UserOut:
     )
 
 
-# ---------------------------------------------------------
-# Seed Admin Endpoint (Public / Helper for setup)
-# ---------------------------------------------------------
-@router.post("/seed-admin", response_model=dict)
-def seed_admin(secret_key: Optional[str] = None):
-    """Seed or promote admin account."""
-    admin_email = "admin@homejoy.com"
-    existing = users_collection.find_one({"email": admin_email})
-    
-    if existing:
-        users_collection.update_one(
-            {"_id": existing["_id"]},
-            {"$set": {"role": "Admin", "is_active": True}}
-        )
-        return {"message": "Existing user admin@homejoy.com promoted to Admin role."}
-    
-    hashed_pwd = get_password_hash("admin123")
-    now_iso = datetime.now(timezone.utc).isoformat()
-    
-    admin_doc = {
-        "full_name": "System Administrator",
-        "email": admin_email,
-        "hashed_password": hashed_pwd,
-        "role": "Admin",
-        "is_active": True,
-        "created_at": now_iso
-    }
-    users_collection.insert_one(admin_doc)
-    return {"message": "Admin user created successfully! Email: admin@homejoy.com, Password: admin123"}
+# Admin seeding endpoint removed to prevent unauthenticated administrative escalation.
+# Use the CLI setup script `python -m backend.seed_admin` for one-time provisioning.
 
 
 # ---------------------------------------------------------
@@ -98,7 +71,7 @@ def get_dashboard_stats(admin_user: dict = Depends(get_current_admin_user)):
 @router.get("/users", response_model=List[UserOut])
 def get_all_users(
     search: Optional[str] = Query(None, description="Search by name or email"),
-    role: Optional[str] = Query(None, description="Filter by role (Elderly, Caregiver, Family Member, Admin)"),
+    role: Optional[str] = Query(None, description="Filter by role (Elderly, Caregiver, Doctor, Admin)"),
     status: Optional[str] = Query(None, description="Filter by status (active, inactive)"),
     admin_user: dict = Depends(get_current_admin_user)
 ):
@@ -249,20 +222,20 @@ def get_analytics(admin_user: dict = Depends(get_current_admin_user)):
     active_count = users_collection.count_documents({"$or": [{"is_active": True}, {"is_active": {"$exists": False}}]})
     inactive_count = users_collection.count_documents({"is_active": False})
     
-    # Simple monthly registration timeline simulation or actual count
-    # Let's aggregate by month if created_at exists
+    # Genuine monthly registration counts from actual created_at ISO timestamps
     now = datetime.now(timezone.utc)
-    months = []
+    month_keys = []
+    month_labels = []
     for i in range(5, -1, -1):
-        dt = now - timedelta(days=i*30)
-        months.append(dt.strftime("%b %Y"))
+        dt = now - timedelta(days=i * 30)
+        month_keys.append(dt.strftime("%Y-%m"))
+        month_labels.append(dt.strftime("%b %Y"))
         
-    # Group users by month
+    # Fetch real counts per month using regex or string prefix
     registration_trend = []
-    for m in months:
-        # Approximate matching by string prefix or count
-        count = users_collection.count_documents({}) # fallback
-        registration_trend.append({"month": m, "count": max(1, count - (months.index(m) * 2))})
+    for key, label in zip(month_keys, month_labels):
+        real_count = users_collection.count_documents({"created_at": {"$regex": f"^{key}"}})
+        registration_trend.append({"month": label, "count": real_count})
         
     return AnalyticsData(
         registration_trend=registration_trend,

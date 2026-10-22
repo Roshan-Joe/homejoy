@@ -113,7 +113,7 @@ class EmailService:
         risk_bg = "#f0fdf4" if wellness_risk == "Low" else ("#fffbeb" if wellness_risk in ["Medium", "Moderate"] else "#fef2f2")
 
         # HTML Escape dynamic contents
-        esc_guardian_name = html.escape(guardian_name or "Family Member")
+        esc_guardian_name = html.escape(guardian_name or "Designated Guardian")
         esc_elderly_name = html.escape(elderly_name)
         esc_report_date = html.escape(report_date)
         esc_mood = html.escape(str(mood))

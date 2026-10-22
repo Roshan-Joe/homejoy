@@ -64,7 +64,7 @@ class ElderlyService:
                     "date_of_birth": "1954-04-12",
                     "gender": "Female",
                     "blood_group": "O+",
-                    "emergency_contact_name": "Family Contact",
+                    "emergency_contact_name": "Emergency Contact",
                     "emergency_contact_phone": u.get("phone", ""),
                     "assigned_caregiver_id": None,
                     "assigned_caregiver_name": "Not Assigned",

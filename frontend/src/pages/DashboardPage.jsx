@@ -9,8 +9,8 @@ export const DashboardPage = () => {
     switch (role) {
       case 'Caregiver':
         return 'badge-caregiver';
-      case 'Family Member':
-        return 'badge-family';
+      case 'Admin':
+        return 'badge-admin';
       default:
         return 'badge-elderly';
     }

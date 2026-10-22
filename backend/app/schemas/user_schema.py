@@ -7,7 +7,6 @@ class UserRole(str, Enum):
     ELDERLY = "Elderly"
     CAREGIVER = "Caregiver"
     DOCTOR = "Doctor"
-    FAMILY_MEMBER = "Family Member"
 
 class UserStatus(str, Enum):
     ACTIVE = "active"

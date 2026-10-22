@@ -60,7 +60,7 @@ def register(user_data: UserCreate):
             "full_name": user_data.full_name.strip(),
             "email": email_clean,
             "guardian_name": user_data.guardian_name,
-            "guardian_relationship": user_data.guardian_relationship or "Family Contact",
+            "guardian_relationship": user_data.guardian_relationship or "Guardian",
             "guardian_phone": user_data.guardian_phone,
             "guardian_email": user_data.guardian_email,
             "guardian_report_consent": bool(user_data.guardian_report_consent),
