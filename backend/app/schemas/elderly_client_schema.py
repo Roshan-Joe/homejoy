@@ -365,6 +365,7 @@ class MedicationResponse(BaseModel):
 
 class TakeDosePayload(BaseModel):
     scheduled_time: str = Field(..., pattern=r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", json_schema_extra={"example": "08:00"})
+    med_id: Optional[str] = None
 
 
 class UndoDosePayload(BaseModel):
@@ -376,10 +377,13 @@ class DoseSlotResponse(BaseModel):
     name: str
     dosage: str
     scheduled_time: str
+    scheduled_time_display: Optional[str] = None
     slot: str  # Morning | Afternoon | Evening | Night
     state: str  # upcoming | due | taken | taken_late | missed | skipped
     opens_at: str
+    opens_at_display: Optional[str] = None
     closes_at: str
+    closes_at_display: Optional[str] = None
     taken_at: Optional[str] = None
     late_minutes: Optional[int] = 0
     source: Optional[str] = None
@@ -388,6 +392,7 @@ class DoseSlotResponse(BaseModel):
 
 
 class DoseAdherenceResponse(BaseModel):
+    today: Optional[dict] = None
     today_taken: int
     today_total: int
     seven_day_percentage: float

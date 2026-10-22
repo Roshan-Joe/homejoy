@@ -20,6 +20,7 @@ from app.schemas.caregiver_portal_schema import (
     DailyReportEmailStatusResponse
 )
 from app.schemas.caregiver_schema import CaregiverResponseSchema
+from app.schemas.elderly_client_schema import TakeDosePayload, DoseSlotResponse
 
 router = APIRouter(prefix="/api/caregiver/me", tags=["Caregiver Portal (Self-Service)"])
 caregiver_elderly_router = APIRouter(prefix="/api/caregiver", tags=["Caregiver Guardian Daily Report"])
@@ -120,6 +121,87 @@ def get_elderly_medications(
     current_user: dict = Depends(get_current_caregiver_user)
 ):
     return CaregiverPortalService.get_elderly_medications(current_user, elderly_id)
+
+
+@router.get("/elderly/{elderly_id}/doses/today", response_model=List[DoseSlotResponse], summary="Get today's dose timeline for assigned elderly resident")
+def get_elderly_today_doses(
+    elderly_id: str,
+    date: Optional[str] = Query(None, description="Optional YYYY-MM-DD date"),
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    return CaregiverPortalService.get_elderly_today_doses(current_user, elderly_id, target_date_str=date)
+
+
+@router.post("/elderly/{elderly_id}/doses/take", summary="Caregiver marks dose as taken on behalf of elderly client")
+def caregiver_take_dose(
+    elderly_id: str,
+    payload: TakeDosePayload,
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    if not payload.med_id:
+        raise HTTPException(status_code=400, detail="med_id is required in payload.")
+    return CaregiverPortalService.caregiver_take_dose(
+        current_user=current_user,
+        elderly_id=elderly_id,
+        med_id=payload.med_id,
+        scheduled_time=payload.scheduled_time
+    )
+
+
+@router.post("/elderly/{elderly_id}/medications/{med_id}/take", summary="Caregiver marks specific medication dose as taken")
+def caregiver_take_medication_dose(
+    elderly_id: str,
+    med_id: str,
+    payload: TakeDosePayload,
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    return CaregiverPortalService.caregiver_take_dose(
+        current_user=current_user,
+        elderly_id=elderly_id,
+        med_id=med_id,
+        scheduled_time=payload.scheduled_time
+    )
+
+
+# Also mount direct routes on caregiver_elderly_router (/api/caregiver/elderly/{elderly_id}/...)
+@caregiver_elderly_router.get("/elderly/{elderly_id}/doses/today", response_model=List[DoseSlotResponse], summary="Get today's dose timeline (Direct)")
+def get_elderly_today_doses_direct(
+    elderly_id: str,
+    date: Optional[str] = Query(None, description="Optional YYYY-MM-DD date"),
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    return CaregiverPortalService.get_elderly_today_doses(current_user, elderly_id, target_date_str=date)
+
+
+@caregiver_elderly_router.post("/elderly/{elderly_id}/doses/take", summary="Caregiver marks dose as taken (Direct)")
+def caregiver_take_dose_direct(
+    elderly_id: str,
+    payload: TakeDosePayload,
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    if not payload.med_id:
+        raise HTTPException(status_code=400, detail="med_id is required in payload.")
+    return CaregiverPortalService.caregiver_take_dose(
+        current_user=current_user,
+        elderly_id=elderly_id,
+        med_id=payload.med_id,
+        scheduled_time=payload.scheduled_time
+    )
+
+
+@caregiver_elderly_router.post("/elderly/{elderly_id}/medications/{med_id}/take", summary="Caregiver marks medication dose as taken (Direct)")
+def caregiver_take_medication_dose_direct(
+    elderly_id: str,
+    med_id: str,
+    payload: TakeDosePayload,
+    current_user: dict = Depends(get_current_caregiver_user)
+):
+    return CaregiverPortalService.caregiver_take_dose(
+        current_user=current_user,
+        elderly_id=elderly_id,
+        med_id=med_id,
+        scheduled_time=payload.scheduled_time
+    )
 
 
 # ---------------------------------------------------------------------------

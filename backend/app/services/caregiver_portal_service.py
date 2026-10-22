@@ -755,6 +755,27 @@ class CaregiverPortalService:
 
         return results
 
+    @staticmethod
+    def get_elderly_today_doses(current_user: Dict[str, Any], elderly_id: str, target_date_str: Optional[str] = None) -> List[Dict[str, Any]]:
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        elderly_doc = CaregiverPortalService._verify_elderly_assigned(cg_context, elderly_id)
+        eld_user_id = str(elderly_doc.get("user_id") or str(elderly_doc["_id"]))
+        from app.services.medication_dose_service import MedicationDoseService
+        return MedicationDoseService.get_today_slots(eld_user_id, target_date_str)
+
+    @staticmethod
+    def caregiver_take_dose(current_user: Dict[str, Any], elderly_id: str, med_id: str, scheduled_time: str) -> Dict[str, Any]:
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        elderly_doc = CaregiverPortalService._verify_elderly_assigned(cg_context, elderly_id)
+        eld_user_id = str(elderly_doc.get("user_id") or str(elderly_doc["_id"]))
+        from app.services.medication_dose_service import MedicationDoseService
+        return MedicationDoseService.take_dose(
+            user_id=eld_user_id,
+            med_id=med_id,
+            scheduled_time=scheduled_time,
+            source="caregiver"
+        )
+
     # ---------------------------------------------------------------------------
     # 7. Check-in Reminder Action
     # ---------------------------------------------------------------------------

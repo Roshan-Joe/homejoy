@@ -29,8 +29,9 @@ def startup_event():
         print("[WARN] Database indexing deferred:", e)
 
     try:
-        from app.services.report_scheduler import init_daily_report_scheduler
+        from app.services.report_scheduler import init_daily_report_scheduler, init_missed_dose_scheduler
         init_daily_report_scheduler()
+        init_missed_dose_scheduler()
     except Exception as e:
         print("[WARN] Report scheduler startup deferred:", e)
 

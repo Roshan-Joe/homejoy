@@ -35,3 +35,7 @@ SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").lower() in ("true", "1", "yes")
 EMAIL_MODE = os.getenv("EMAIL_MODE", "console").lower()  # "smtp" | "console"
 AUTO_SEND_DAILY_REPORTS = os.getenv("AUTO_SEND_DAILY_REPORTS", "false").lower() in ("true", "1", "yes")
 AUTO_SEND_TIME = os.getenv("AUTO_SEND_TIME", "20:00")  # IST time format HH:MM
+
+# Smart Pill Companion Time Windows (Minutes)
+DOSE_WINDOW_BEFORE_MIN = int(os.getenv("DOSE_WINDOW_BEFORE_MIN", "60"))
+DOSE_WINDOW_AFTER_MIN = int(os.getenv("DOSE_WINDOW_AFTER_MIN", "180"))

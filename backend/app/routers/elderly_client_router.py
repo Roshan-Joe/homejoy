@@ -21,6 +21,10 @@ from app.schemas.elderly_client_schema import (
     MedicationUpdate,
     MedicationResponse,
     DoseLogRequest,
+    TakeDosePayload,
+    UndoDosePayload,
+    DoseSlotResponse,
+    DoseAdherenceResponse,
     EmergencyContactCreate,
     EmergencyContactUpdate,
     EmergencyContactResponse,
@@ -33,6 +37,7 @@ from app.schemas.elderly_client_schema import (
 )
 from app.schemas.vitals_schema import VitalsCreate
 from app.schemas.help_request_schema import HelpRequestCreate
+from app.services.medication_dose_service import MedicationDoseService
 
 router = APIRouter(prefix="/api/elderly/me", tags=["Elderly Client"])
 
@@ -130,6 +135,53 @@ def get_doctor_info(current_user: dict = Depends(get_current_elderly_user)):
 @router.get("/medications", response_model=List[MedicationResponse], summary="Get my medications")
 def list_medications(current_user: dict = Depends(get_current_elderly_user)):
     return ElderlyClientService.list_medications(current_user)
+
+
+@router.get("/medications/today", response_model=List[DoseSlotResponse], summary="Get today's medication dose slots")
+def get_today_medication_slots(
+    date: Optional[str] = Query(None, description="Optional YYYY-MM-DD date"),
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    user_id = str(current_user["id"])
+    return MedicationDoseService.get_today_slots(user_id, date)
+
+
+@router.get("/medications/adherence", response_model=DoseAdherenceResponse, summary="Get medication adherence stats and streak")
+def get_medication_adherence(
+    days: int = Query(7, ge=1, le=90),
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    user_id = str(current_user["id"])
+    return MedicationDoseService.get_adherence(user_id=user_id, days=days)
+
+
+@router.post("/medications/{med_id}/take", summary="Mark medication dose as taken")
+def take_medication_dose(
+    med_id: str,
+    payload: TakeDosePayload,
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    user_id = str(current_user["id"])
+    return MedicationDoseService.take_dose(
+        user_id=user_id,
+        med_id=med_id,
+        scheduled_time=payload.scheduled_time,
+        source="patient"
+    )
+
+
+@router.post("/medications/{med_id}/undo", summary="Undo taken dose within 5 minutes")
+def undo_medication_dose(
+    med_id: str,
+    payload: UndoDosePayload,
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    user_id = str(current_user["id"])
+    return MedicationDoseService.undo_dose(
+        user_id=user_id,
+        med_id=med_id,
+        scheduled_time=payload.scheduled_time
+    )
 
 
 @router.post("/medications", response_model=MedicationResponse, status_code=status.HTTP_201_CREATED,

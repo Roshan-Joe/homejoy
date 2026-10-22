@@ -83,3 +83,38 @@ def init_daily_report_scheduler():
     except Exception as e:
         print("[WARN] Failed to start Daily Report APScheduler:", e)
         return None
+
+
+def init_missed_dose_scheduler():
+    """
+    Initializes APScheduler background job running every 15 minutes to scan
+    and alert for closed dose windows without records.
+    """
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from apscheduler.triggers.interval import IntervalTrigger
+
+        scheduler = BackgroundScheduler(timezone="Asia/Kolkata")
+
+        def run_missed_dose_job():
+            try:
+                from app.services.medication_dose_service import MedicationDoseService
+                MedicationDoseService.scan_and_alert_missed_doses()
+            except Exception as e:
+                print("[WARN] Missed dose scanner error:", e)
+
+        scheduler.add_job(
+            run_missed_dose_job,
+            IntervalTrigger(minutes=15),
+            id="missed_dose_scanner_job",
+            replace_existing=True
+        )
+        scheduler.start()
+        print("[OK] Missed Dose Scanner APScheduler started — running every 15 minutes.")
+        return scheduler
+    except ImportError:
+        print("[INFO] APScheduler library not installed; missed dose background scanner deferred.")
+        return None
+    except Exception as e:
+        print("[WARN] Failed to start Missed Dose Scanner APScheduler:", e)
+        return None

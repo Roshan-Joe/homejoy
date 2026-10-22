@@ -22,6 +22,7 @@ from app.database import (
     wellness_checkins_collection,
     notifications_collection,
     vitals_collection,
+    dose_logs_collection,
 )
 from app.schemas.elderly_client_schema import (
     ElderlyProfileSelfUpdate,
@@ -621,6 +622,30 @@ class ElderlyClientService:
             "created_at": now_iso
         })
 
+        # Attempt to record into dose_logs_collection
+        if status_val == "taken":
+            try:
+                from app.services.medication_dose_service import MedicationDoseService
+                med_doc = medications_collection.find_one({"_id": ObjectId(med_id)}) if ObjectId.is_valid(med_id) else None
+                sched_time = None
+                if intake_time:
+                    parsed_times = parse_legacy_intake_time(intake_time)
+                    if parsed_times:
+                        sched_time = parsed_times[0]
+                if not sched_time and med_doc:
+                    m_times = med_doc.get("times") or parse_legacy_intake_time(med_doc.get("intake_time", ""))
+                    if m_times:
+                        sched_time = m_times[0]
+                if sched_time:
+                    MedicationDoseService.take_dose(
+                        user_id=user["id"],
+                        med_id=med_id,
+                        scheduled_time=sched_time,
+                        source="patient"
+                    )
+            except Exception:
+                pass
+
         caregiver_notified = False
         caregiver_name = "Assigned Caregiver"
 
@@ -838,6 +863,22 @@ class ElderlyClientService:
 
         data = payload.model_dump()
 
+        # Auto-derive medication_taken from dose_logs if available for this date
+        medication_taken = payload.medication_taken
+        try:
+            logs_today = list(dose_logs_collection.find({"user_id": user["id"], "scheduled_date": payload.date}))
+            if logs_today:
+                missed_count = sum(1 for l in logs_today if l.get("status") == "missed")
+                taken_count = sum(1 for l in logs_today if l.get("status") == "taken")
+                if missed_count > 0:
+                    medication_taken = "Missed some doses"
+                elif taken_count > 0:
+                    medication_taken = "Yes, all taken"
+        except Exception:
+            pass
+
+        data["medication_taken"] = medication_taken
+
         # Fetch recent historical check-ins to compute personal behavioral baseline
         historical_cursor = list(
             wellness_checkins_collection.find({"user_id": user["id"]})
@@ -860,7 +901,7 @@ class ElderlyClientService:
         doc = {
             "user_id": user["id"],
             "date": payload.date,
-            "medication_taken": payload.medication_taken,
+            "medication_taken": medication_taken,
             "appetite": payload.appetite,
             "sleep_quality": payload.sleep_quality,
             "mobility_difficulty": payload.mobility_difficulty,
