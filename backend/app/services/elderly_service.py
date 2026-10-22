@@ -5,7 +5,7 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from fastapi import HTTPException, status
 
-from app.database import elderly_collection, users_collection
+from app.database import elderly_collection, users_collection, caregivers_collection
 from app.models.elderly_model import serialize_elderly_doc, calculate_risk_level
 from app.models.user_model import serialize_user_doc
 from app.schemas.elderly_schema import (
@@ -175,6 +175,12 @@ class ElderlyService:
             "address": payload.address or "",
             "emergency_contact_name": payload.emergency_contact_name or "",
             "emergency_contact_phone": payload.emergency_contact_phone or "",
+            "guardian_name": payload.guardian_name or "",
+            "guardian_relationship": payload.guardian_relationship or "",
+            "guardian_phone": payload.guardian_phone or "",
+            "guardian_email": payload.guardian_email or "",
+            "guardian_report_consent": bool(payload.guardian_report_consent),
+            "guardian_report_enabled": bool(payload.guardian_report_enabled if payload.guardian_email else False),
             "assigned_caregiver_id": None,
             "assigned_caregiver_name": "Not Assigned",
             "assigned_doctor_id": None,
@@ -237,6 +243,24 @@ class ElderlyService:
         if payload.emergency_contact_phone is not None:
             updates["emergency_contact_phone"] = payload.emergency_contact_phone
 
+        if payload.guardian_name is not None:
+            updates["guardian_name"] = payload.guardian_name
+
+        if payload.guardian_relationship is not None:
+            updates["guardian_relationship"] = payload.guardian_relationship
+
+        if payload.guardian_phone is not None:
+            updates["guardian_phone"] = payload.guardian_phone
+
+        if payload.guardian_email is not None:
+            updates["guardian_email"] = payload.guardian_email
+
+        if payload.guardian_report_consent is not None:
+            updates["guardian_report_consent"] = bool(payload.guardian_report_consent)
+
+        if payload.guardian_report_enabled is not None:
+            updates["guardian_report_enabled"] = bool(payload.guardian_report_enabled)
+
         if payload.medical_conditions is not None:
             updates["medical_conditions"] = payload.medical_conditions
 
@@ -265,23 +289,70 @@ class ElderlyService:
         if not elderly_doc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Elderly profile not found")
 
-        caregiver_id = payload.caregiver_id
-        caregiver_name = "Not Assigned"
+        eld_pk_str = str(elderly_doc["_id"])
+        eld_user_id = str(elderly_doc.get("user_id", ""))
+        eld_name = elderly_doc.get("full_name") or elderly_doc.get("name", "Elderly Patient")
 
-        if caregiver_id and caregiver_id.strip():
-            try:
-                cg_obj_id = ObjectId(caregiver_id.strip())
-                cg_user = users_collection.find_one({"_id": cg_obj_id})
-                if cg_user:
-                    caregiver_name = cg_user.get("full_name") or cg_user.get("name", "Caregiver")
-            except Exception:
-                pass
+        old_caregiver_id = elderly_doc.get("assigned_caregiver_id")
+        new_caregiver_id = payload.caregiver_id.strip() if payload.caregiver_id and payload.caregiver_id.strip() else None
+        caregiver_name = "Not Assigned"
+        target_cg_profile = None
+
+        if new_caregiver_id:
+            # Look up caregiver profile or user account
+            if ObjectId.is_valid(new_caregiver_id):
+                target_cg_profile = caregivers_collection.find_one({"_id": ObjectId(new_caregiver_id)})
+            if not target_cg_profile:
+                target_cg_profile = caregivers_collection.find_one({"user_id": new_caregiver_id})
+
+            if target_cg_profile:
+                caregiver_name = target_cg_profile.get("name") or target_cg_profile.get("full_name", "Caregiver Staff")
+            else:
+                # Fallback to users collection if profile was not yet generated
+                try:
+                    cg_user = users_collection.find_one({"_id": ObjectId(new_caregiver_id)})
+                    if cg_user:
+                        caregiver_name = cg_user.get("full_name") or cg_user.get("name", "Caregiver Staff")
+                except Exception:
+                    pass
+
+        # 1. Clean up old caregiver assignment if changed
+        if old_caregiver_id and old_caregiver_id != new_caregiver_id:
+            old_cg_query = {"$or": [
+                {"assigned_elderly_ids": eld_pk_str},
+                {"assigned_elderly_ids": eld_user_id}
+            ]}
+            if ObjectId.is_valid(old_caregiver_id):
+                old_cg_query["$or"].extend([{"_id": ObjectId(old_caregiver_id)}, {"user_id": old_caregiver_id}])
+            caregivers_collection.update_many(
+                old_cg_query,
+                {"$pull": {
+                    "assigned_elderly_ids": {"$in": [eld_pk_str, eld_user_id]},
+                    "assigned_elderly_names": eld_name
+                }}
+            )
+
+        # 2. Add elderly to new caregiver profile if assigned
+        if target_cg_profile:
+            caregivers_collection.update_one(
+                {"_id": target_cg_profile["_id"]},
+                {
+                    "$addToSet": {"assigned_elderly_ids": eld_pk_str},
+                    "$set": {"updatedAt": datetime.now(timezone.utc).isoformat()}
+                }
+            )
+            # Ensure name is also tracked
+            cg_current = caregivers_collection.find_one({"_id": target_cg_profile["_id"]})
+            names = list(cg_current.get("assigned_elderly_names", []))
+            if eld_name not in names:
+                names.append(eld_name)
+                caregivers_collection.update_one({"_id": target_cg_profile["_id"]}, {"$set": {"assigned_elderly_names": names}})
 
         now_iso = datetime.now(timezone.utc).isoformat()
         elderly_collection.update_one(
             {"_id": obj_id},
             {"$set": {
-                "assigned_caregiver_id": caregiver_id if caregiver_id and caregiver_id.strip() else None,
+                "assigned_caregiver_id": new_caregiver_id,
                 "assigned_caregiver_name": caregiver_name,
                 "updatedAt": now_iso
             }}
@@ -289,6 +360,7 @@ class ElderlyService:
 
         updated_doc = elderly_collection.find_one({"_id": obj_id})
         return serialize_elderly_doc(updated_doc)
+
 
     @staticmethod
     def assign_doctor(elderly_id: str, payload: AssignDoctorSchema) -> Dict[str, Any]:

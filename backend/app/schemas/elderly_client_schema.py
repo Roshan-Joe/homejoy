@@ -21,6 +21,12 @@ class ElderlyProfileSelfUpdate(BaseModel):
     date_of_birth: Optional[str] = None  # ISO date string YYYY-MM-DD
     gender: Optional[str] = None
     address: Optional[str] = None
+    guardian_name: Optional[str] = None
+    guardian_relationship: Optional[str] = None
+    guardian_phone: Optional[str] = None
+    guardian_email: Optional[EmailStr] = None
+    guardian_report_consent: Optional[bool] = None
+    guardian_report_enabled: Optional[bool] = None
 
     @field_validator("date_of_birth")
     @classmethod
@@ -58,6 +64,12 @@ class ElderlyProfileResponse(BaseModel):
     gender: Optional[str] = ""
     address: Optional[str] = ""
     blood_group: Optional[str] = ""
+    guardian_name: Optional[str] = ""
+    guardian_relationship: Optional[str] = ""
+    guardian_phone: Optional[str] = ""
+    guardian_email: Optional[str] = ""
+    guardian_report_consent: Optional[bool] = False
+    guardian_report_enabled: Optional[bool] = True
     profileImage: Optional[str] = ""
     setup_complete: bool = False
     notification_prefs: Optional[Dict[str, Any]] = None
@@ -381,6 +393,9 @@ class CheckInResponse(BaseModel):
     notes: Optional[str] = ""
     wellness_risk: str   # Low / Moderate / High — never phrased as a diagnosis
     created_at: str
+    contributing_factors: Optional[List[str]] = Field(default_factory=list)
+    baseline_comparison: Optional[str] = ""
+    engine_note: Optional[str] = ""
 
 
 # ---------------------------------------------------------------------------
