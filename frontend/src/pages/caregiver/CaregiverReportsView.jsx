@@ -1,6 +1,25 @@
 import React, { useState } from 'react';
-import { FileText, Calendar, Download, Users, CheckCircle2, Activity } from 'lucide-react';
+import { 
+  FileText, 
+  Calendar, 
+  Download, 
+  Users, 
+  CheckCircle2, 
+  Activity, 
+  Send, 
+  Clock, 
+  ShieldCheck, 
+  Mail, 
+  Smartphone, 
+  MessageSquare, 
+  Sparkles, 
+  AlertCircle, 
+  Eye, 
+  Check
+} from 'lucide-react';
 import caregiverPortalService from '../../services/caregiverPortalService';
+import { CareReportExportModal } from '../../components/caregiver/CareReportExportModal';
+import { GuardianDailyReportCard } from '../../components/caregiver/GuardianDailyReportCard';
 
 export const CaregiverReportsView = ({ assignedElderly = [] }) => {
   const [selectedElderlyId, setSelectedElderlyId] = useState(assignedElderly[0]?.id || '');
@@ -9,6 +28,9 @@ export const CaregiverReportsView = ({ assignedElderly = [] }) => {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showExportModal, setShowExportModal] = useState(false);
+
+  const activePatientName = assignedElderly.find(e => e.id === selectedElderlyId)?.name || 'Assigned Resident';
 
   const handleGenerateReport = async (e) => {
     e.preventDefault();
@@ -31,13 +53,61 @@ export const CaregiverReportsView = ({ assignedElderly = [] }) => {
     }
   };
 
+
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Header & Controls */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {/* ─── RESIDENT SELECTION ─── */}
+      <div 
+        className="glass-card" 
+        style={{ 
+          padding: '20px 24px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          flexWrap: 'wrap', 
+          gap: '16px' 
+        }}
+      >
+        <div>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
+            Patient Reports & Guardian Dispatch
+          </h2>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Select an assigned elderly resident to manage reports and send daily wellness updates to their guardian
+          </span>
+        </div>
+        <div style={{ minWidth: '260px' }}>
+          <select
+            className="form-input"
+            value={selectedElderlyId}
+            onChange={(e) => setSelectedElderlyId(e.target.value)}
+            style={{ fontWeight: 600, borderColor: '#cbd5e1' }}
+          >
+            {assignedElderly.map(e => (
+              <option key={e.id} value={e.id}>{e.name || e.full_name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* ─── SECTION 1: GUARDIAN DAILY WELLNESS REPORT DISPATCH ─── */}
+      {selectedElderlyId ? (
+        <GuardianDailyReportCard 
+          elderlyId={selectedElderlyId} 
+          elderlyName={activePatientName} 
+        />
+      ) : (
+        <div className="glass-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Please select an assigned resident above to view guardian contact and dispatch wellness reports.
+        </div>
+      )}
+
+      {/* ─── SECTION 2: HISTORICAL CARE SUMMARY REPORT BUILDER ─── */}
       <div className="glass-card" style={{ padding: '24px' }}>
-        <h1 style={{ fontSize: '1.4rem', fontWeight: 700, margin: '0 0 4px 0' }}>Care Summary Reports</h1>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 4px 0' }}>Historical Care Summary Reports</h2>
         <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 0 20px 0' }}>
-          Select an assigned elderly client and custom date range to review wellness telemetry, medication adherence rates, and alert logs.
+          Select custom date range to generate long-term wellness telemetry, adherence trends, and print PDF reports.
         </p>
 
         <form onSubmit={handleGenerateReport} style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-end' }}>
@@ -77,6 +147,25 @@ export const CaregiverReportsView = ({ assignedElderly = [] }) => {
 
           <button type="submit" className="btn btn-primary" disabled={loading || !selectedElderlyId}>
             {loading ? 'Generating...' : 'Generate Care Report'}
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setShowExportModal(true)}
+            disabled={!selectedElderlyId}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#ffffff',
+              border: '1.5px solid #0d9488',
+              color: '#0f766e',
+              fontWeight: 700
+            }}
+          >
+            <Download size={16} />
+            <span>Export Official Clinical PDF</span>
           </button>
         </form>
       </div>
@@ -160,6 +249,15 @@ export const CaregiverReportsView = ({ assignedElderly = [] }) => {
           </div>
         </div>
       )}
+
+      {/* Official Clinical Care Report PDF Export Modal */}
+      {showExportModal && selectedElderlyId && (
+        <CareReportExportModal
+          elderlyId={selectedElderlyId}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
     </div>
   );
 };
+

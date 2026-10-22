@@ -5,12 +5,15 @@ import {
 } from 'lucide-react';
 import caregiverPortalService from '../../services/caregiverPortalService';
 import { WellnessRiskBadge } from '../../components/elderly/WellnessRiskBadge';
+import { CareReportExportModal } from '../../components/caregiver/CareReportExportModal';
+import { GuardianDailyReportCard } from '../../components/caregiver/GuardianDailyReportCard';
 
 export const CaregiverElderlyDetailView = ({ elderlyId, onBack, onSendReminder }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('overview'); // overview | health | meds | contacts | history | report
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // History state
   const [historyData, setHistoryData] = useState(null);
@@ -460,11 +463,14 @@ export const CaregiverElderlyDetailView = ({ elderlyId, onBack, onSendReminder }
         </div>
       )}
 
-      {/* Emergency Contacts Sub-Tab */}
+      {/* Emergency Contacts & Guardian Sub-Tab */}
       {activeSubTab === 'contacts' && (
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 16px 0' }}>Emergency Contacts</h3>
-          {emergency_contacts.length === 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <GuardianDailyReportCard elderlyId={elderlyId} elderlyName={profile.full_name || profile.name} />
+
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 16px 0' }}>Emergency Contacts</h3>
+            {emergency_contacts.length === 0 ? (
             <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>
               No emergency contacts added yet by client.
             </div>
@@ -486,7 +492,8 @@ export const CaregiverElderlyDetailView = ({ elderlyId, onBack, onSendReminder }
             </div>
           )}
         </div>
-      )}
+      </div>
+    )}
 
       {/* Wellness History Sub-Tab */}
       {activeSubTab === 'history' && (
@@ -547,6 +554,23 @@ export const CaregiverElderlyDetailView = ({ elderlyId, onBack, onSendReminder }
             <button type="submit" className="btn btn-primary" disabled={reportLoading}>
               {reportLoading ? 'Generating...' : 'Generate Summary'}
             </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setShowExportModal(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#ffffff',
+                border: '1.5px solid #0d9488',
+                color: '#0f766e',
+                fontWeight: 700
+              }}
+            >
+              <FileText size={16} />
+              <span>Export Official Clinical PDF</span>
+            </button>
           </form>
 
           {reportData && (
@@ -574,6 +598,14 @@ export const CaregiverElderlyDetailView = ({ elderlyId, onBack, onSendReminder }
             </div>
           )}
         </div>
+      )}
+
+      {/* Official Clinical PDF Export Modal */}
+      {showExportModal && (
+        <CareReportExportModal
+          elderlyId={elderlyId}
+          onClose={() => setShowExportModal(false)}
+        />
       )}
 
     </div>

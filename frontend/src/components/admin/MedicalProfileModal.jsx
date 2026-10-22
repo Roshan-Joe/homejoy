@@ -158,6 +158,42 @@ export const MedicalProfileModal = ({ isOpen, onClose, elderly }) => {
               <strong>{elderly.emergency_contact_name || 'Not provided'}</strong> • {elderly.emergency_contact_phone || 'No phone'}
             </div>
           </div>
+
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+            <h5 style={{ fontSize: '0.92rem', fontWeight: 700, marginBottom: '6px', color: '#15803d', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>Guardian / Family Contact (Daily Wellness Reports)</span>
+            </h5>
+            <div style={{ fontSize: '0.88rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div>
+                <strong>{elderly.guardian_name || 'Not provided'}</strong>
+                {elderly.guardian_relationship && <span style={{ color: 'var(--text-muted)' }}> ({elderly.guardian_relationship})</span>}
+                {elderly.guardian_phone && <span> • 📞 {elderly.guardian_phone}</span>}
+              </div>
+              {elderly.guardian_email ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginTop: '2px' }}>
+                  <span style={{ color: '#0f766e', fontWeight: 600 }}>✉️ {elderly.guardian_email}</span>
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '12px', fontSize: '0.74rem', fontWeight: 700,
+                    backgroundColor: elderly.guardian_report_consent ? '#dcfce7' : '#fee2e2',
+                    color: elderly.guardian_report_consent ? '#15803d' : '#b91c1c'
+                  }}>
+                    {elderly.guardian_report_consent ? '✓ Consent Verified' : '✕ No Consent'}
+                  </span>
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '12px', fontSize: '0.74rem', fontWeight: 700,
+                    backgroundColor: elderly.guardian_report_enabled ? '#e0f2fe' : '#f1f5f9',
+                    color: elderly.guardian_report_enabled ? '#0369a1' : '#64748b'
+                  }}>
+                    {elderly.guardian_report_enabled ? 'Reports Active' : 'Reports Paused'}
+                  </span>
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                  No email address registered for daily reports.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Wellness Check-in History */}

@@ -113,6 +113,106 @@ export const caregiverPortalService = {
   updateSettings: async (payload) => {
     const response = await api.put('/api/caregiver/me/settings/notifications', payload);
     return response.data;
+  },
+
+  // --- Assigned Daily Reports & Urgent Help Requests ---
+  getDailyReports: async ({ date = '', elderlyId = '' } = {}) => {
+    const params = {};
+    if (date) params.date = date;
+    if (elderlyId) params.elderly_id = elderlyId;
+    const response = await api.get('/api/caregiver/me/daily-reports', { params });
+    return response.data;
+  },
+
+  getElderlyDailyReport: async (elderlyId, date = '') => {
+    const params = {};
+    if (date) params.date = date;
+    const response = await api.get(`/api/caregiver/me/elderly/${elderlyId}/daily-report`, { params });
+    return response.data;
+  },
+
+  getHelpRequests: async ({ status = 'all' } = {}) => {
+    const params = {};
+    if (status && status !== 'all') params.status = status;
+    const response = await api.get('/api/caregiver/me/help-requests', { params });
+    return response.data;
+  },
+
+  acknowledgeHelpRequest: async (requestId) => {
+    const response = await api.put(`/api/caregiver/me/help-requests/${requestId}/acknowledge`);
+    return response.data;
+  },
+
+  resolveHelpRequest: async (requestId, resolutionNote = '') => {
+    const response = await api.put(`/api/caregiver/me/help-requests/${requestId}/resolve`, {
+      resolution_note: resolutionNote
+    });
+    return response.data;
+  },
+
+  // --- Handover Notes & Shift Transitions ---
+  getHandoverNotes: async ({ limit = 20, shift = '' } = {}) => {
+    const params = { limit };
+    if (shift && shift !== 'all') params.shift = shift;
+    const response = await api.get('/api/caregiver/me/handover', { params });
+    return response.data;
+  },
+
+  createHandoverNote: async (payload) => {
+    const response = await api.post('/api/caregiver/me/handover', payload);
+    return response.data;
+  },
+
+  // --- Missed Check-in Escalations ---
+  getEscalations: async (status = 'active') => {
+    const params = {};
+    if (status && status !== 'all') params.status = status;
+    const response = await api.get('/api/caregiver/me/escalations', { params });
+    return response.data;
+  },
+
+  scanEscalations: async () => {
+    const response = await api.post('/api/caregiver/me/escalations/scan');
+    return response.data;
+  },
+
+  resolveEscalation: async (escalationId, resolutionNotes = '') => {
+    const response = await api.put(`/api/caregiver/me/escalations/${escalationId}/resolve`, {
+      resolution_notes: resolutionNotes
+    });
+    return response.data;
+  },
+
+  // --- Trends & Official Care Report ---
+  getElderlyTrends: async (elderlyId, days = 14) => {
+    const response = await api.get(`/api/caregiver/me/elderly/${elderlyId}/trends`, {
+      params: { days }
+    });
+    return response.data;
+  },
+
+  getOfficialCareReport: async (elderlyId, days = 14) => {
+    const response = await api.get(`/api/caregiver/me/elderly/${elderlyId}/care-report`, {
+      params: { days }
+    });
+    return response.data;
+  },
+
+  // --- Guardian Daily Wellness Report Email ---
+  sendGuardianDailyReportEmail: async (elderlyId, { date = '', note = '', resend = false } = {}) => {
+    const payload = {};
+    if (date) payload.date = date;
+    if (note) payload.note = note;
+    if (resend) payload.resend = resend;
+    const response = await api.post(`/api/caregiver/elderly/${elderlyId}/daily-report/send-email`, payload);
+    return response.data;
+  },
+
+  getGuardianDailyReportEmailStatus: async (elderlyId, date = '') => {
+    const params = {};
+    if (date) params.date = date;
+    const response = await api.get(`/api/caregiver/elderly/${elderlyId}/daily-report/email-status`, { params });
+    return response.data;
   }
 };
 

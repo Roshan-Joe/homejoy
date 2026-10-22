@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas import UserCreate, UserLogin, GoogleLoginRequest, UserOut, Token
 from app.database import users_collection
 from app.security import get_password_hash, verify_password, create_access_token, get_current_user
+from app.config import GOOGLE_CLIENT_ID
 
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -22,6 +23,18 @@ def register(user_data: UserCreate):
             detail="Email address is already registered"
         )
     
+    # Enforce role boundaries: Public self-registration is strictly restricted to Elderly and Caregiver.
+    # Admin, Doctor, and other administrative roles must be provisioned by System Administrator.
+    requested_role = (user_data.role or "Elderly").strip()
+    clean_role_lower = requested_role.lower()
+    if clean_role_lower not in ["elderly", "caregiver"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Self-registration for '{requested_role}' is restricted. Only Elderly and Caregiver accounts can self-register. Admin and other roles must be provisioned by an Administrator."
+        )
+
+    canonical_role = "Caregiver" if clean_role_lower == "caregiver" else "Elderly"
+
     # Hash password & construct user doc
     hashed_pwd = get_password_hash(user_data.password)
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -30,13 +43,38 @@ def register(user_data: UserCreate):
         "full_name": user_data.full_name.strip(),
         "email": email_clean,
         "hashed_password": hashed_pwd,
-        "role": user_data.role,
+        "role": canonical_role,
         "is_active": True,
         "created_at": now_iso
     }
     
     result = users_collection.insert_one(user_doc)
     user_id = str(result.inserted_id)
+
+    # If Elderly account registered, create the initial elderly resident profile with guardian details
+    if canonical_role == "Elderly":
+        from app.database import elderly_collection
+        elderly_doc = {
+            "user_id": user_id,
+            "name": user_data.full_name.strip(),
+            "full_name": user_data.full_name.strip(),
+            "email": email_clean,
+            "guardian_name": user_data.guardian_name,
+            "guardian_relationship": user_data.guardian_relationship or "Family Contact",
+            "guardian_phone": user_data.guardian_phone,
+            "guardian_email": user_data.guardian_email,
+            "guardian_report_consent": bool(user_data.guardian_report_consent),
+            "guardian_report_enabled": bool(user_data.guardian_report_enabled if user_data.guardian_email else False),
+            "assigned_caregiver_id": None,
+            "assigned_caregiver_name": "Not Assigned",
+            "assigned_doctor_id": None,
+            "assigned_doctor_name": "Not Assigned",
+            "ai_risk_score": 0.10,
+            "risk_level": "Low",
+            "createdAt": now_iso,
+            "updatedAt": now_iso
+        }
+        elderly_collection.insert_one(elderly_doc)
     
     # Generate JWT token
     access_token = create_access_token(data={"sub": email_clean})
@@ -119,6 +157,23 @@ def google_login(data: GoogleLoginRequest):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Google token payload does not contain an email address."
         )
+
+    # Verify that aud matches configured Google Client ID to prevent token substitution attacks
+    token_aud = token_info.get("aud")
+    expected_aud = GOOGLE_CLIENT_ID.strip() if GOOGLE_CLIENT_ID else None
+    if not token_aud or (expected_aud and token_aud != expected_aud):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google authentication token: audience (aud) does not match this application's client ID."
+        )
+
+    # Verify that email is verified by Google
+    email_verified = token_info.get("email_verified")
+    if email_verified is not True and str(email_verified).lower() != "true":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google account email address is not verified."
+        )
     
     email_clean = email.lower().strip()
     full_name = token_info.get("name") or email_clean.split("@")[0].capitalize()
@@ -143,10 +198,20 @@ def google_login(data: GoogleLoginRequest):
             users_collection.update_one({"_id": user["_id"]}, {"$set": update_fields})
             user.update(update_fields)
     else:
+        # Enforce role boundaries on public Google signup: Only Elderly or Caregiver
+        requested_role = (data.role or "Elderly").strip()
+        clean_role_lower = requested_role.lower()
+        if clean_role_lower not in ["elderly", "caregiver"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Registration for '{requested_role}' is restricted. Only Elderly and Caregiver accounts can register. Admin and other roles must be provisioned by an Administrator."
+            )
+        google_role = "Caregiver" if clean_role_lower == "caregiver" else "Elderly"
+
         user_doc = {
             "full_name": full_name,
             "email": email_clean,
-            "role": data.role or "Elderly",
+            "role": google_role,
             "is_active": True,
             "created_at": now_iso,
             "google_id": google_sub,
