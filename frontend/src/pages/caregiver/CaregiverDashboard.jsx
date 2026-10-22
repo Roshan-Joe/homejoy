@@ -18,21 +18,43 @@ import {
   ShieldAlert, HeartPulse
 } from 'lucide-react';
 
+import { CaregiverHelpRequestAlert } from '../../components/caregiver/CaregiverHelpRequestAlert';
+import { CaregiverHandoverView } from './CaregiverHandoverView';
+import { CaregiverEscalationView } from './CaregiverEscalationView';
+import NotificationService from '../../services/NotificationService';
+import { ClipboardList, AlertTriangle } from 'lucide-react';
+
 export const CaregiverDashboard = () => {
   const { user, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState('home');
   const [selectedElderlyId, setSelectedElderlyId] = useState(null);
 
   const [dashboardData, setDashboardData] = useState(null);
+  const [helpRequests, setHelpRequests] = useState([]);
+  const [activeEscalationsCount, setActiveEscalationsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(() => {
+    try {
+      const supported = typeof NotificationService?.isSupported === 'function'
+        ? NotificationService.isSupported()
+        : Boolean(NotificationService?.isSupported);
+      return Boolean(supported && typeof Notification !== 'undefined' && Notification.permission === 'default');
+    } catch {
+      return false;
+    }
+  });
 
   const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const res = await caregiverPortalService.getDashboard();
+      const [res, escalations] = await Promise.all([
+        caregiverPortalService.getDashboard(),
+        caregiverPortalService.getEscalations('active').catch(() => [])
+      ]);
       setDashboardData(res);
+      setActiveEscalationsCount(escalations?.length || 0);
     } catch (err) {
       console.error(err);
       setError('Failed to load caregiver dashboard metrics. Please refresh.');
@@ -41,9 +63,29 @@ export const CaregiverDashboard = () => {
     }
   }, []);
 
+  const loadHelpRequests = useCallback(async () => {
+    try {
+      const requests = await caregiverPortalService.getHelpRequests({ status: 'all' });
+      const pending = requests.filter(r => r.status === 'pending');
+      if (pending.length > 0) {
+        pending.forEach(p => {
+          NotificationService.notifyUrgentHelpRequest(p.elderly_name, p.category);
+        });
+      }
+      setHelpRequests(requests);
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
   useEffect(() => {
     loadDashboardData();
-  }, [loadDashboardData]);
+    loadHelpRequests();
+    const interval = setInterval(() => {
+      loadHelpRequests();
+    }, 10000); // 10s live update auto-poll
+    return () => clearInterval(interval);
+  }, [loadDashboardData, loadHelpRequests]);
 
   const handleSelectElderly = (elderlyId) => {
     setSelectedElderlyId(elderlyId);
@@ -76,6 +118,8 @@ export const CaregiverDashboard = () => {
     { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'assigned-elderly', label: 'Assigned Elderly', icon: Users, badge: dashboardData?.summary?.total_assigned },
     { id: 'alerts', label: 'Alerts', icon: ShieldAlert, badge: alertBadgeCount, badgeColor: 'badge-alert-new' },
+    { id: 'escalations', label: 'Escalations', icon: AlertTriangle, badge: activeEscalationsCount, badgeColor: 'badge-alert-new' },
+    { id: 'handover', label: 'Handover Notes', icon: ClipboardList },
     { id: 'tasks', label: 'Tasks', icon: CheckCircle2, badge: dashboardData?.pending_tasks?.length },
     { id: 'reports', label: 'Care Reports', icon: FileText },
     { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -163,6 +207,64 @@ export const CaregiverDashboard = () => {
         />
       ) : (
         <>
+          {/* Web Push Notification Prompt Banner */}
+          {showNotificationPrompt && (
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '14px 20px',
+                background: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+                borderRadius: '14px',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+                boxShadow: '0 4px 14px rgba(13, 148, 136, 0.28)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Bell size={20} />
+                <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>
+                  Enable browser notifications to receive instant desktop alerts for urgent resident help requests & missed check-ins.
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button
+                  onClick={async () => {
+                    const granted = await NotificationService.requestPermission();
+                    if (granted) {
+                      NotificationService.showNotification("HomeJoy Caregiver Triage", {
+                        body: "Desktop notifications enabled for high-priority alerts."
+                      });
+                    }
+                    setShowNotificationPrompt(false);
+                  }}
+                  className="btn btn-sm"
+                  style={{ background: '#ffffff', color: '#0f766e', fontWeight: 800, border: 'none', padding: '6px 14px' }}
+                >
+                  Enable Desktop Alerts
+                </button>
+                <button
+                  onClick={() => setShowNotificationPrompt(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#ffffff', cursor: 'pointer', fontWeight: 800, fontSize: '1.1rem' }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Urgent Help Request Banner */}
+          <CaregiverHelpRequestAlert
+            helpRequests={helpRequests}
+            onStatusUpdated={() => {
+              loadDashboardData();
+              loadHelpRequests();
+            }}
+          />
+
           {currentTab === 'home' && (
             <CaregiverHomeView
               dashboardData={dashboardData}
@@ -192,6 +294,16 @@ export const CaregiverDashboard = () => {
           {currentTab === 'alerts' && (
             <CaregiverAlertsView
               onSelectElderly={handleSelectElderly}
+            />
+          )}
+
+          {currentTab === 'escalations' && (
+            <CaregiverEscalationView />
+          )}
+
+          {currentTab === 'handover' && (
+            <CaregiverHandoverView
+              assignedElderly={dashboardData?.assigned_elderly || []}
             />
           )}
 

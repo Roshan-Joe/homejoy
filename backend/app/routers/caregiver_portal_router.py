@@ -429,14 +429,16 @@ def get_care_report(
 )
 def send_guardian_daily_report_email(
     elderly_id: str,
-    payload: SendDailyReportEmailPayload,
     background_tasks: BackgroundTasks,
+    payload: Optional[SendDailyReportEmailPayload] = None,
     current_user: dict = Depends(get_current_caregiver_user)
 ):
     """
     Sends daily wellness report to the registered guardian email of an assigned elderly resident.
     Requires guardian consent and report enabled. Supports resend=True (up to 3 sends per day).
     """
+    if payload is None:
+        payload = SendDailyReportEmailPayload()
     return CaregiverPortalService.send_daily_report_email(
         current_user=current_user,
         elderly_id=elderly_id,
@@ -451,13 +453,15 @@ def send_guardian_daily_report_email(
 )
 def send_guardian_daily_report_email_direct(
     elderly_id: str,
-    payload: SendDailyReportEmailPayload,
     background_tasks: BackgroundTasks,
+    payload: Optional[SendDailyReportEmailPayload] = None,
     current_user: dict = Depends(get_current_caregiver_user)
 ):
     """
     Alias matching /api/caregiver/elderly/{elderly_id}/daily-report/send-email.
     """
+    if payload is None:
+        payload = SendDailyReportEmailPayload()
     return CaregiverPortalService.send_daily_report_email(
         current_user=current_user,
         elderly_id=elderly_id,

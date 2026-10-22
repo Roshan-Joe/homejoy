@@ -58,6 +58,17 @@ export const elderlyClientService = {
 
   // --- Setup ---
   markSetupComplete: () => api.post(`${BASE}/setup/complete`).then(r => r.data),
+
+  // --- Daily Monitoring & Vitals ---
+  getDailyStatus: () => api.get(`${BASE}/daily-status`).then(r => r.data),
+  submitVitals: (payload) => api.post(`${BASE}/vitals`, payload).then(r => r.data),
+  getTodayVitals: () => api.get(`${BASE}/vitals/today`).then(r => r.data),
+  getDailyReport: (date) => api.get(`${BASE}/daily-report`, { params: { date } }).then(r => r.data),
+
+  // --- Help Request ---
+  submitHelpRequest: (payload) => api.post(`${BASE}/help-request`, payload).then(r => r.data),
+  getHelpRequests: () => api.get(`${BASE}/help-requests`).then(r => r.data),
+  acknowledgeReminder: () => api.post(`${BASE}/reminder-acknowledge`).then(r => r.data),
 };
 
 export default elderlyClientService;

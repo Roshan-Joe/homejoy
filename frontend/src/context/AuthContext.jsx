@@ -4,16 +4,40 @@ import api from '../services/api';
 
 const AuthContext = createContext(null);
 
+// ============================================================================
+// SECURITY AUDIT FINDING: LOCALSTORAGE TOKEN STORAGE
+// ----------------------------------------------------------------------------
+// Tokens are stored in localStorage for prototype / educational demonstration.
+// Risk: Susceptible to token exfiltration if client-side XSS vulnerabilities exist.
+// Enterprise / Production Mitigation: Store tokens in HttpOnly, Secure, SameSite=Strict
+// cookies with CSRF defense, or use short-lived memory state with refresh rotation.
+// ============================================================================
+
 // 30 Minutes Inactivity Timeout Constants for Healthcare Security Compliance
 const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes
 const WARNING_THRESHOLD_MS = 28 * 60 * 1000; // 28 minutes (Warning appears 2 minutes before logout)
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('homejoy_user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('homejoy_user');
+      if (!savedUser || savedUser === 'undefined' || savedUser === 'null') return null;
+      return JSON.parse(savedUser);
+    } catch (err) {
+      console.warn("Corrupt homejoy_user in localStorage, resetting:", err);
+      try { localStorage.removeItem('homejoy_user'); } catch {}
+      return null;
+    }
   });
-  const [token, setToken] = useState(() => localStorage.getItem('homejoy_token') || null);
+  const [token, setToken] = useState(() => {
+    try {
+      const savedToken = localStorage.getItem('homejoy_token');
+      if (!savedToken || savedToken === 'undefined' || savedToken === 'null') return null;
+      return savedToken;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
   const [lastActivity, setLastActivity] = useState(Date.now());

@@ -6,23 +6,39 @@ export const CaregiverElderlyListView = ({ assignedElderly = [], onSelectElderly
   const [searchTerm, setSearchTerm] = useState('');
   const [riskFilter, setRiskFilter] = useState('all');
   const [checkinFilter, setCheckinFilter] = useState('all');
+  const [sortByPriority, setSortByPriority] = useState(true);
 
-  const filteredElderly = assignedElderly.filter(item => {
-    const matchesSearch = !searchTerm ||
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.phone && item.phone.includes(searchTerm));
+  const getPriorityScore = (item) => {
+    const risk = (item.risk_level || '').toLowerCase();
+    const isMissed = item.last_checkin_date === 'No check-in today';
+    if (risk === 'high') return 4;
+    if (isMissed && risk === 'moderate') return 3.5;
+    if (risk === 'moderate') return 3;
+    if (isMissed) return 2;
+    return 1;
+  };
 
-    const matchesRisk = riskFilter === 'all' || item.risk_level.toLowerCase() === riskFilter.toLowerCase();
+  const filteredElderly = assignedElderly
+    .filter(item => {
+      const matchesSearch = !searchTerm ||
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.phone && item.phone.includes(searchTerm));
 
-    let matchesCheckin = true;
-    if (checkinFilter === 'checked_in') {
-      matchesCheckin = item.last_checkin_date !== 'No check-in today';
-    } else if (checkinFilter === 'missed') {
-      matchesCheckin = item.last_checkin_date === 'No check-in today';
-    }
+      const matchesRisk = riskFilter === 'all' || item.risk_level.toLowerCase() === riskFilter.toLowerCase();
 
-    return matchesSearch && matchesRisk && matchesCheckin;
-  });
+      let matchesCheckin = true;
+      if (checkinFilter === 'checked_in') {
+        matchesCheckin = item.last_checkin_date !== 'No check-in today';
+      } else if (checkinFilter === 'missed') {
+        matchesCheckin = item.last_checkin_date === 'No check-in today';
+      }
+
+      return matchesSearch && matchesRisk && matchesCheckin;
+    })
+    .sort((a, b) => {
+      if (!sortByPriority) return 0;
+      return getPriorityScore(b) - getPriorityScore(a);
+    });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -35,6 +51,25 @@ export const CaregiverElderlyListView = ({ assignedElderly = [], onSelectElderly
               Showing {filteredElderly.length} of {assignedElderly.length} clients assigned to your care.
             </p>
           </div>
+
+          {/* Caregiver Priority Queue Switch (Innovation #4) */}
+          <button
+            onClick={() => setSortByPriority(!sortByPriority)}
+            className="btn btn-sm"
+            style={{
+              backgroundColor: sortByPriority ? '#f0fdf4' : '#f8fafc',
+              border: `1.5px solid ${sortByPriority ? '#86efac' : '#cbd5e1'}`,
+              color: sortByPriority ? '#15803d' : '#475569',
+              fontWeight: 700,
+              padding: '8px 16px',
+              borderRadius: '9999px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            <span>{sortByPriority ? '⚡ Priority Queue: ON' : '📋 Standard Order'}</span>
+          </button>
         </div>
 
         {/* Filters bar */}

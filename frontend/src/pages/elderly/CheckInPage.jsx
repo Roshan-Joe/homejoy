@@ -106,7 +106,7 @@ export const CheckInPage = ({ onBack, onSuccess }) => {
     setSubmitting(true);
     setError('');
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const payload = {
         date: today,
         medication_taken: answers.medication_taken,
@@ -147,21 +147,70 @@ export const CheckInPage = ({ onBack, onSuccess }) => {
   if (result) {
     return (
       <div className="animate-fade-in">
-        <div className="glass-card" style={{ padding: '48px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
-          <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎉</div>
-          <h2 style={{ fontWeight: 800, fontSize: '1.5rem', marginBottom: '8px', color: 'var(--text-main)' }}>Check-In Complete!</h2>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '24px' }}>Well done for taking care of your wellness today.</p>
-          <WellnessRiskBadge riskLevel={result.wellness_risk} size="lg" />
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '12px', lineHeight: '1.5' }}>
-            This is a wellness indicator, not a medical diagnosis. If you feel unwell, please contact your caregiver.
+        <div className="glass-card" style={{ padding: '36px 32px', textAlign: 'center', maxWidth: '540px', margin: '0 auto' }}>
+          <div style={{ fontSize: '3.5rem', marginBottom: '12px' }}>🎉</div>
+          <h2 style={{ fontWeight: 800, fontSize: '1.45rem', marginBottom: '8px', color: 'var(--text-main)' }}>Check-In Complete!</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '18px' }}>Well done for taking care of your wellness today.</p>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+            <WellnessRiskBadge riskLevel={result.wellness_risk} size="lg" />
+          </div>
+
+          {/* Personalized Behavioral Baseline (Innovation #1) */}
+          {result.baseline_comparison && (
+            <div style={{
+              backgroundColor: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              margin: '16px 0',
+              textAlign: 'left',
+              fontSize: '0.88rem',
+              color: '#166534',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <span style={{ fontSize: '1.2rem' }}>📊</span>
+              <div>
+                <strong>Personal Baseline:</strong> {result.baseline_comparison}
+              </div>
+            </div>
+          )}
+
+          {/* Explainable Contributing Factors (Phase 15) */}
+          {result.contributing_factors && result.contributing_factors.length > 0 && (
+            <div style={{
+              backgroundColor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '14px 16px',
+              textAlign: 'left',
+              margin: '14px 0'
+            }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
+                Key Telemetry Indicators:
+              </div>
+              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.86rem', color: '#334155', lineHeight: 1.6 }}>
+                {result.contributing_factors.map((factor, idx) => (
+                  <li key={idx}>{factor}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: '12px', lineHeight: '1.5' }}>
+            Notice: This explainable score is calculated from user-reported telemetry to support caregiver attention and is NOT a clinical diagnosis.
           </p>
-          <button className="btn btn-primary" onClick={onSuccess} style={{ marginTop: '24px', width: '100%', minHeight: '52px', fontSize: '1rem' }}>
+
+          <button className="btn btn-primary" onClick={onSuccess} style={{ marginTop: '20px', width: '100%', minHeight: '50px', fontSize: '1rem', fontWeight: 700 }}>
             Back to Dashboard
           </button>
         </div>
       </div>
     );
   }
+
 
   const progress = ((currentStep) / STEPS.length) * 100;
 

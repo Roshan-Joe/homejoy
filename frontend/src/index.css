@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* ==========================================================================
    HomeJoy Healthcare Design System Tokens & Base Styles
@@ -6,27 +6,33 @@
 
 :root {
   /* Typography */
-  --font-primary: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-primary: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   /* Color Palette — Healthcare Deep Emerald & Slate Theme */
-  --bg-main: #f8fafc;
+  --bg-main: #f7fafc;
   --bg-surface: #ffffff;
   --bg-elevated: #ffffff;
   --bg-subtle: #f1f5f9;
+  --bg-subtle-alt: #eef2f7;
 
   /* Text Colors */
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-light: #64748b;
+  --text-main: #0d1f2d;
+  --text-muted: #4a5568;
+  --text-light: #718096;
   --text-inverse: #ffffff;
+  --text-heading: #0b1f2e;
 
-  /* Primary Brand (Emerald Teal) */
+  /* Primary Brand (Deep Teal/Green) */
   --primary: #0d9488;
-  --primary-hover: #0f766e;
-  --primary-active: #115e59;
-  --primary-light: #f0fdfa;
-  --primary-border: #99f6e4;
-  --primary-glow: rgba(13, 148, 136, 0.16);
+  --primary-hover: #0a7c72;
+  --primary-active: #086b62;
+  --primary-light: #e8fdf9;
+  --primary-lighter: #f0fdfa;
+  --primary-border: #81e8db;
+  --primary-border-light: #b2f0e8;
+  --primary-glow: rgba(13, 148, 136, 0.18);
+  --primary-glow-lg: rgba(13, 148, 136, 0.28);
 
   /* Secondary Accent (Slate Navy & Sky Blue) */
   --secondary: #0284c7;
@@ -108,6 +114,42 @@
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Pastel Healthcare Color System */
+  --pastel-mint-bg: #f0fdf4;
+  --pastel-mint-card: #e8f5e9;
+  --pastel-mint-border: #c8e6c9;
+  --pastel-mint-text: #2e7d32;
+
+  --pastel-sky-bg: #f0f9ff;
+  --pastel-sky-card: #e0f2fe;
+  --pastel-sky-border: #bae6fd;
+  --pastel-sky-text: #0369a1;
+
+  --pastel-lavender-bg: #faf5ff;
+  --pastel-lavender-card: #f3e8ff;
+  --pastel-lavender-border: #e9d5ff;
+  --pastel-lavender-text: #7e22ce;
+
+  --pastel-rose-bg: #fff1f2;
+  --pastel-rose-card: #ffe4e6;
+  --pastel-rose-border: #fecdd3;
+  --pastel-rose-text: #be123c;
+
+  --pastel-amber-bg: #fffbeb;
+  --pastel-amber-card: #fef3c7;
+  --pastel-amber-border: #fde68a;
+  --pastel-amber-text: #b45309;
+
+  --pastel-indigo-bg: #eef2ff;
+  --pastel-indigo-card: #e0e7ff;
+  --pastel-indigo-border: #c7d2fe;
+  --pastel-indigo-text: #3730a3;
+
+  /* Glassmorphism & Pastel Backdrop Elements */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.8);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.06);
 
   /* Touch Boundaries */
   --touch-target-min: 44px;
@@ -2497,15 +2539,29 @@ body[data-carer-theme="green"] {
 
 /* Specific Page Imagery Backdrops */
 .page-bg-auth {
-  background-image: url('./assets/elderly_welcome.png');
+  background-color: var(--bg-main);
+  background-image: radial-gradient(rgba(13, 148, 136, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
 .page-bg-elderly {
-  background-image: url('./assets/daily_checkin.png');
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(224, 242, 254, 0.7) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(243, 232, 255, 0.7) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(240, 253, 244, 0.7) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(254, 243, 199, 0.5) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
 .page-bg-caregiver {
-  background-image: url('./assets/homejoy_caregiver_care.png');
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(240, 253, 244, 0.7) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(224, 242, 254, 0.7) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(243, 232, 255, 0.7) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(241, 245, 249, 0.8) 0px, transparent 50%);
+  background-attachment: fixed;
 }
 
 .page-bg-admin {
@@ -2513,6 +2569,111 @@ body[data-carer-theme="green"] {
   background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 0);
   background-size: 20px 20px;
 }
+
+/* ==========================================================================
+   Pastel Design System & Standout Features Utility Classes
+   ========================================================================== */
+
+/* Glassmorphic Cards with Soft Pastel Hover Effects */
+.pastel-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.04), 0 4px 10px -2px rgba(15, 23, 42, 0.02);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.pastel-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.08);
+}
+
+.pastel-card-mint {
+  background: linear-gradient(135deg, rgba(240, 253, 244, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid var(--pastel-mint-border);
+}
+
+.pastel-card-sky {
+  background: linear-gradient(135deg, rgba(240, 249, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid var(--pastel-sky-border);
+}
+
+.pastel-card-lavender {
+  background: linear-gradient(135deg, rgba(250, 245, 255, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid var(--pastel-lavender-border);
+}
+
+.pastel-card-rose {
+  background: linear-gradient(135deg, rgba(255, 241, 242, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid var(--pastel-rose-border);
+}
+
+.pastel-card-amber {
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border: 1px solid var(--pastel-amber-border);
+}
+
+.pastel-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pastel-badge-mint {
+  background-color: var(--pastel-mint-card);
+  color: var(--pastel-mint-text);
+  border: 1px solid var(--pastel-mint-border);
+}
+
+.pastel-badge-sky {
+  background-color: var(--pastel-sky-card);
+  color: var(--pastel-sky-text);
+  border: 1px solid var(--pastel-sky-border);
+}
+
+.pastel-badge-lavender {
+  background-color: var(--pastel-lavender-card);
+  color: var(--pastel-lavender-text);
+  border: 1px solid var(--pastel-lavender-border);
+}
+
+.pastel-badge-rose {
+  background-color: var(--pastel-rose-card);
+  color: var(--pastel-rose-text);
+  border: 1px solid var(--pastel-rose-border);
+}
+
+.pastel-badge-amber {
+  background-color: var(--pastel-amber-card);
+  color: var(--pastel-amber-text);
+  border: 1px solid var(--pastel-amber-border);
+}
+
+/* Pulse Glow & Floating Animations */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(13, 148, 136, 0); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}
+
+@keyframes voiceWave {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.animate-voice-wave {
+  animation: voiceWave 1.4s ease-in-out infinite;
+}
+
 
 /* Touch Target Sizes & Elderly Accessibility */
 .btn-elderly-touch {
@@ -2536,6 +2697,65 @@ body[data-carer-theme="green"] {
   outline-offset: 3px !important;
 }
 
+/* ==========================================================================
+   Joy AI Talk Assistant & JoyCircle Family Feed Styles
+   ========================================================================== */
+
+@keyframes aiOrbPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 18px rgba(124, 58, 237, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+}
+
+.ai-orb-pulsing {
+  animation: aiOrbPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes eqBarWave {
+  0%, 100% { height: 6px; }
+  50% { height: 28px; }
+}
+
+.eq-bar {
+  width: 4px;
+  background: #a855f7;
+  border-radius: 4px;
+  display: inline-block;
+  animation: eqBarWave 1.2s ease-in-out infinite;
+}
+
+.eq-bar:nth-child(1) { animation-delay: 0.1s; }
+.eq-bar:nth-child(2) { animation-delay: 0.3s; }
+.eq-bar:nth-child(3) { animation-delay: 0.2s; }
+.eq-bar:nth-child(4) { animation-delay: 0.4s; }
+.eq-bar:nth-child(5) { animation-delay: 0.15s; }
+
+.floating-ai-trigger {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 999;
+  background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+  color: #ffffff;
+  padding: 14px 22px;
+  border-radius: 9999px;
+  border: 2px solid #ddd6fe;
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 12px 28px rgba(124, 58, 237, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.floating-ai-trigger:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 16px 36px rgba(124, 58, 237, 0.5);
+}
+
+
 /* Prefers Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
@@ -2547,4 +2767,720 @@ body[data-carer-theme="green"] {
 }
 
 
+/* ==========================================================================
+   HOMEJOY PREMIUM UI ENHANCEMENT — DESIGN SYSTEM UPGRADE v2
+   All rules here OVERRIDE/ENHANCE prior styles for elevated visual quality.
+   ========================================================================== */
 
+/* ── TYPOGRAPHY ENHANCEMENT ─────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--text-heading);
+}
+
+/* ── ENHANCED CARD SYSTEM ───────────────────────────────────────────────── */
+
+/* Premium card with stronger depth perception */
+.card {
+  background-color: #ffffff;
+  border: 1px solid #e8edf2;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(13, 30, 50, 0.04), 0 4px 16px rgba(13, 30, 50, 0.03);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+.card-hover:hover {
+  border-color: #d0d9e3;
+  box-shadow: 0 4px 16px rgba(13, 30, 50, 0.08), 0 1px 3px rgba(13, 30, 50, 0.04);
+  transform: translateY(-2px);
+}
+
+/* Enhanced glass card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: var(--radius-lg);
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 8px 24px rgba(13, 30, 50, 0.06),
+    0 1px 3px rgba(13, 30, 50, 0.04);
+}
+
+.glass-card:hover {
+  box-shadow: 
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 12px 32px rgba(13, 30, 50, 0.1),
+    0 0 0 1px rgba(13, 148, 136, 0.12);
+  border-color: rgba(13, 148, 136, 0.2);
+}
+
+/* Premium stat card */
+.stat-card-premium {
+  background: #ffffff;
+  border: 1px solid #eaeff5;
+  border-radius: var(--radius-xl);
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(13, 30, 50, 0.04), 0 1px 2px rgba(13, 30, 50, 0.03);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.stat-card-premium:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(13, 30, 50, 0.08);
+  border-color: #d4dce6;
+}
+
+.stat-card-premium .stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card-premium .stat-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-card-premium .stat-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── ENHANCED BUTTON SYSTEM ─────────────────────────────────────────────── */
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #0a7c72 100%);
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px var(--primary-glow), 0 1px 2px rgba(0,0,0,0.1);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255,255,255,0.3);
+  border-radius: inherit;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0a7c72 0%, #086b62 100%);
+  box-shadow: 0 4px 16px var(--primary-glow-lg), 0 1px 2px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px var(--primary-glow);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: var(--text-main);
+  border: 1px solid #dde3ea;
+  box-shadow: 0 1px 3px rgba(13, 30, 50, 0.06);
+}
+
+.btn-secondary:hover {
+  background: #f7f9fc;
+  border-color: #c8d0da;
+  box-shadow: 0 2px 6px rgba(13, 30, 50, 0.08);
+}
+
+.btn-danger {
+  background: #fff1f2;
+  color: #dc2626;
+  border: 1px solid #fecdd3;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08);
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+/* ── ENHANCED FORM CONTROLS ─────────────────────────────────────────────── */
+
+.form-input,
+.form-select,
+.form-textarea {
+  border: 1.5px solid #dde3ea;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  outline: none;
+}
+
+/* ── ENHANCED NAVBAR ────────────────────────────────────────────────────── */
+
+.homejoy-header {
+  border-bottom: 1px solid rgba(220, 228, 236, 0.7) !important;
+  box-shadow: 0 1px 8px rgba(13, 30, 50, 0.04), 0 0 1px rgba(13, 30, 50, 0.02) !important;
+}
+
+/* ── PREMIUM ADMIN SIDEBAR ──────────────────────────────────────────────── */
+
+.admin-sidebar {
+  background: #ffffff;
+  border-right: none;
+  border: 1px solid #eaeff5;
+  border-radius: var(--radius-xl);
+  padding: 20px 16px;
+}
+
+.admin-sidebar-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #a0aec0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0 8px 14px 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+.admin-nav {
+  gap: 2px;
+}
+
+.admin-nav-item {
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #5a6878;
+  transition: all 0.15s ease;
+  gap: 10px;
+  border: none;
+}
+
+.admin-nav-item:hover {
+  background: #f0f6ff;
+  color: var(--text-main);
+}
+
+.admin-nav-item.active {
+  background: linear-gradient(135deg, #e8fdf9 0%, #d1f9f0 100%);
+  color: var(--primary-active);
+  font-weight: 700;
+  border: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.admin-nav-item.active .admin-nav-icon {
+  color: var(--primary);
+}
+
+.admin-nav-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.admin-nav-item:hover .admin-nav-icon,
+.admin-nav-item.active .admin-nav-icon {
+  opacity: 1;
+}
+
+/* Admin Dashboard Layout improvements */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .admin-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .admin-sidebar {
+    position: static !important;
+    border-radius: var(--radius-lg);
+  }
+  .admin-nav {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    display: flex;
+  }
+  .admin-nav-item {
+    white-space: nowrap;
+  }
+}
+
+/* ── PREMIUM CAREGIVER TAB NAVIGATION ───────────────────────────────────── */
+
+.cg-tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  background: #f4f7fb;
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+
+.cg-tab-nav .btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, #0a7c72 100%) !important;
+  box-shadow: 0 2px 8px var(--primary-glow) !important;
+}
+
+.cg-tab-nav .btn-ghost {
+  color: #5a6878;
+  font-weight: 500;
+}
+
+.cg-tab-nav .btn-ghost:hover {
+  background: rgba(255,255,255,0.85);
+  color: var(--text-main);
+}
+
+/* ── ELDERLY PORTAL PREMIUM ENHANCEMENTS ────────────────────────────────── */
+
+/* Richer hero card gradient */
+.elderly-hero-card {
+  background: linear-gradient(150deg, #ffffff 0%, #f0fdfa 40%, #e0faf4 100%);
+  border: 1.5px solid #b2f0e8;
+  box-shadow: 
+    0 12px 32px rgba(13, 148, 136, 0.1),
+    0 4px 8px rgba(13, 148, 136, 0.05),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+/* Elderly tile cards - richer hover */
+.elderly-tile {
+  border: 1.5px solid #eaeff5;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(13, 30, 50, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.elderly-tile:hover {
+  border-color: var(--primary-border);
+  box-shadow: 0 12px 28px rgba(13, 148, 136, 0.12), 0 4px 8px rgba(13, 148, 136, 0.06);
+  transform: translateY(-4px);
+}
+
+/* Wellness banner - richer */
+.elderly-wellness-banner {
+  background: linear-gradient(150deg, #f0fdf9 0%, #e6fff9 100%);
+  border: 1.5px solid #b2f0e8;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.07);
+}
+
+/* ── CAREGIVER HOME VIEW CARDS ───────────────────────────────────────────── */
+
+/* Help request alert banner */
+.hj-help-alert {
+  background: linear-gradient(135deg, #fff1f2 0%, #fff5f5 100%);
+  border: 1.5px solid #fca5a5;
+  border-radius: var(--radius-xl);
+  padding: 18px 22px;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.1);
+}
+
+/* ── BADGE REFINEMENTS ───────────────────────────────────────────────────── */
+
+.badge {
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+/* Rounded pill badges when explicitly used */
+.badge-pill {
+  border-radius: var(--radius-pill);
+}
+
+/* ── PREMIUM LANDING PAGE HERO ───────────────────────────────────────────── */
+
+.landing-hero-section {
+  padding: 80px 24px 100px;
+}
+
+/* Feature card hover refinement */
+.landing-feature-card {
+  border: 1.5px solid #eaeff5;
+  border-radius: 20px;
+  padding: 32px 28px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(13, 30, 50, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  height: 100%;
+}
+
+.landing-feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 36px rgba(13, 30, 50, 0.08);
+  border-color: var(--primary-border);
+}
+
+/* ── TABLE REFINEMENTS ───────────────────────────────────────────────────── */
+
+.table th {
+  background: #f7fafc;
+  color: #64748b;
+  font-size: 0.75rem;
+  letter-spacing: 0.6px;
+}
+
+.table tbody tr:hover {
+  background: #f7fdf9;
+}
+
+/* ── MODAL REFINEMENTS ───────────────────────────────────────────────────── */
+
+.modal-container {
+  border-radius: 20px;
+  box-shadow: 
+    0 24px 64px rgba(13, 30, 50, 0.18),
+    0 4px 16px rgba(13, 30, 50, 0.08),
+    0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.modal-header {
+  border-radius: 20px 20px 0 0;
+  padding: 22px 28px;
+}
+
+.modal-body {
+  padding: 24px 28px;
+}
+
+.modal-footer {
+  padding: 18px 28px;
+  border-radius: 0 0 20px 20px;
+}
+
+/* ── SCROLL REFINEMENTS ─────────────────────────────────────────────────── */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ── ALERT REFINEMENTS ───────────────────────────────────────────────────── */
+
+.alert {
+  border-radius: var(--radius-lg);
+  border-width: 1.5px;
+}
+
+/* ── PASTEL CARD ENHANCEMENT ────────────────────────────────────────────── */
+
+.pastel-card {
+  border-radius: 20px;
+  border: 1.5px solid #eaeff5;
+  box-shadow: 0 2px 8px rgba(13, 30, 50, 0.04);
+}
+
+.pastel-card:hover {
+  box-shadow: 0 8px 24px rgba(13, 30, 50, 0.08);
+  transform: translateY(-2px);
+}
+
+/* ── LOADING STATE REFINEMENTS ──────────────────────────────────────────── */
+
+.state-card {
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%);
+}
+
+/* ── FLOATING AI TRIGGER REFINEMENT ─────────────────────────────────────── */
+
+.floating-ai-trigger {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35), 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.floating-ai-trigger:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.45), 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ── MOBILE NAVIGATION IMPROVEMENT ─────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  /* Caregiver tab nav mobile */
+  .cg-tab-nav {
+    padding: 4px;
+    border-radius: var(--radius-md);
+  }
+
+  /* Admin responsive */
+  .admin-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Better touch targets on mobile */
+  .elderly-tile {
+    border-radius: var(--radius-lg);
+    padding: 20px 18px;
+  }
+
+  /* Stat cards stack better */
+  .elderly-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .elderly-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .elderly-tile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hero-title {
+    font-size: 2rem;
+  }
+
+  .modal-header {
+    padding: 16px 20px;
+  }
+
+  .modal-body {
+    padding: 16px 20px;
+  }
+
+  .modal-footer {
+    padding: 14px 20px;
+  }
+}
+
+/* ── HOMEJOY BRAND CONSISTENCY ──────────────────────────────────────────── */
+
+/* Consistent brand interaction color on links */
+a {
+  color: var(--primary);
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* ── PAGE BACKGROUND REFINEMENTS ────────────────────────────────────────── */
+
+.page-bg-elderly {
+  background-color: #f7fafc;
+  background-image: 
+    radial-gradient(at 5% 5%, rgba(209, 250, 229, 0.5) 0px, transparent 50%),
+    radial-gradient(at 95% 5%, rgba(199, 210, 254, 0.4) 0px, transparent 50%),
+    radial-gradient(at 95% 95%, rgba(209, 250, 229, 0.5) 0px, transparent 50%),
+    radial-gradient(at 5% 95%, rgba(253, 230, 138, 0.3) 0px, transparent 50%);
+}
+
+.page-bg-caregiver {
+  background-color: #f7fafc;
+  background-image: 
+    radial-gradient(at 5% 5%, rgba(209, 250, 229, 0.45) 0px, transparent 50%),
+    radial-gradient(at 95% 5%, rgba(186, 230, 253, 0.45) 0px, transparent 50%),
+    radial-gradient(at 95% 95%, rgba(233, 213, 255, 0.4) 0px, transparent 50%),
+    radial-gradient(at 5% 95%, rgba(241, 245, 249, 0.6) 0px, transparent 50%);
+}
+
+.page-bg-admin {
+  background-color: #f7fafc;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+/* ── SELECTED PILL / ACTIVE TAB ANIMATION ───────────────────────────────── */
+
+@keyframes activePulse {
+  0% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.3); }
+  100% { box-shadow: 0 0 0 6px rgba(13, 148, 136, 0); }
+}
+
+/* ── CARD CONTENT HIGHLIGHT STRIPS ─────────────────────────────────────── */
+
+/* Left-border accent cards */
+.card-accent-primary {
+  border-left: 4px solid var(--primary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.card-accent-danger {
+  border-left: 4px solid var(--danger);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.card-accent-warning {
+  border-left: 4px solid var(--warning);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+/* ── HOMEJOY WELLNESS METRIC MINI-CARDS ─────────────────────────────────── */
+
+.metric-mini-card {
+  background: #f7fafc;
+  border: 1px solid #eaeff5;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.metric-mini-card:hover {
+  background: #ffffff;
+  border-color: var(--primary-border);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.08);
+  transform: translateY(-2px);
+}
+
+.metric-mini-card .metric-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.metric-mini-card .metric-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ── SECTION HEADERS PREMIUM ────────────────────────────────────────────── */
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ── PILL NAV TABS ───────────────────────────────────────────────────────── */
+
+.pill-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pill-nav::-webkit-scrollbar { display: none; }
+
+.pill-nav-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  border: none;
+  background: none;
+}
+
+.pill-nav-item:hover {
+  background: rgba(255,255,255,0.7);
+  color: var(--text-main);
+}
+
+.pill-nav-item.active {
+  background: #ffffff;
+  color: var(--primary-hover);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(13, 30, 50, 0.1);
+}
+
+/* ── ENHANCED EMPTY STATE ───────────────────────────────────────────────── */
+
+.state-card {
+  border: 1.5px dashed #dde3ea;
+  background: #fafcfe;
+  box-shadow: none;
+}
+
+/* ── PRINT UTILITIES ─────────────────────────────────────────────────────── */
+
+@media print {
+  .navbar,
+  .floating-ai-trigger,
+  .btn-danger,
+  .modal-overlay {
+    display: none !important;
+  }
+}
+
+/* ── END PREMIUM UI ENHANCEMENT ─────────────────────────────────────────── */

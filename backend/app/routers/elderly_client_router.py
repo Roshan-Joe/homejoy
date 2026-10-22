@@ -31,6 +31,8 @@ from app.schemas.elderly_client_schema import (
     NotificationPrefsUpdate,
     ChangePasswordRequest,
 )
+from app.schemas.vitals_schema import VitalsCreate
+from app.schemas.help_request_schema import HelpRequestCreate
 
 router = APIRouter(prefix="/api/elderly/me", tags=["Elderly Client"])
 
@@ -251,6 +253,38 @@ def submit_checkin(
     return ElderlyClientService.submit_checkin(current_user, payload)
 
 
+@router.post("/checkins/conversational-extract", summary="Extract structured check-in parameters from voice/text transcript")
+def conversational_checkin_extract(
+    payload: dict,
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    """
+    Parses conversational speech transcript into structured check-in parameters.
+    """
+    transcript = payload.get("transcript") or payload.get("text") or ""
+    return ElderlyClientService.conversational_extract(transcript)
+
+
+@router.get("/assistant-context", summary="Get real database context for Joy AI Companion")
+def get_assistant_context(current_user: dict = Depends(get_current_elderly_user)):
+    """
+    Returns authentic database records (medications, vitals, caregiver, check-in status, score)
+    so Joy AI provides genuine, personalized healthcare guidance.
+    """
+    return ElderlyClientService.get_assistant_context(current_user)
+
+
+@router.get("/wellness-trends", summary="Get personalized baseline and health trend trajectory")
+def get_wellness_trends(
+    days: int = Query(7, ge=7, le=30),
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    """
+    Returns real historical trend trajectory and personal baseline metrics for charts.
+    """
+    return ElderlyClientService.get_wellness_trends(current_user, days=days)
+
+
 # ---------------------------------------------------------------------------
 # 9. Wellness History
 # ---------------------------------------------------------------------------
@@ -304,3 +338,51 @@ def change_password(
 def mark_setup_complete(current_user: dict = Depends(get_current_elderly_user)):
     """Called at the end of the first-time setup wizard to set setup_complete=True."""
     return ElderlyClientService.mark_setup_complete(current_user)
+
+
+# ---------------------------------------------------------------------------
+# 13. Daily Monitoring, Vitals, Reports & Help Requests
+# ---------------------------------------------------------------------------
+
+@router.get("/daily-status", summary="Get today's monitoring completion status & 9 AM reminder state")
+def get_daily_status(current_user: dict = Depends(get_current_elderly_user)):
+    return ElderlyClientService.get_daily_status(current_user)
+
+
+@router.post("/vitals", summary="Log blood pressure and oxygen saturation")
+def log_vitals(
+    payload: VitalsCreate,
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    return ElderlyClientService.upsert_vitals(current_user, payload)
+
+
+@router.get("/vitals/today", summary="Get today's logged vitals")
+def get_today_vitals(current_user: dict = Depends(get_current_elderly_user)):
+    return ElderlyClientService.get_today_vitals(current_user)
+
+
+@router.get("/daily-report", summary="Get today's daily wellness report")
+def get_daily_report(
+    date: Optional[str] = Query(None, description="ISO date YYYY-MM-DD"),
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    return ElderlyClientService.get_daily_report(current_user, date)
+
+
+@router.post("/help-request", summary="Submit urgent help request to assigned caregiver")
+def create_help_request(
+    payload: HelpRequestCreate,
+    current_user: dict = Depends(get_current_elderly_user)
+):
+    return ElderlyClientService.create_help_request(current_user, payload)
+
+
+@router.get("/help-requests", summary="Get my help request history")
+def get_help_requests(current_user: dict = Depends(get_current_elderly_user)):
+    return ElderlyClientService.get_help_requests(current_user)
+
+
+@router.post("/reminder-acknowledge", summary="Acknowledge/dismiss 9 AM reminder for today")
+def acknowledge_reminder(current_user: dict = Depends(get_current_elderly_user)):
+    return ElderlyClientService.acknowledge_reminder(current_user)

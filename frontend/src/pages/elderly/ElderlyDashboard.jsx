@@ -14,6 +14,18 @@ import { WellnessHistoryPage } from './WellnessHistoryPage';
 import { NotificationsPage } from './NotificationsPage';
 import { ElderlySettingsPage } from './ElderlySettingsPage';
 import { LoadingState } from '../../components/common/LoadingState';
+
+import { DailyReminderModal } from '../../components/elderly/DailyReminderModal';
+import { VitalsModal } from '../../components/elderly/VitalsModal';
+import { RequestHelpModal } from '../../components/elderly/RequestHelpModal';
+import { DailyReportModal } from '../../components/elderly/DailyReportModal';
+import { VoiceCheckInModal } from '../../components/elderly/VoiceCheckInModal';
+import { MedPassModal } from '../../components/elderly/MedPassModal';
+
+import { VitalsGuardChart } from '../../components/elderly/VitalsGuardChart';
+import { SmartPillCompanion } from '../../components/elderly/SmartPillCompanion';
+import NotificationService from '../../services/NotificationService';
+
 import { 
   HeartPulse, 
   CheckCircle2, 
@@ -29,7 +41,11 @@ import {
   Bell,
   ChevronRight,
   UserCheck,
-  Heart
+  Heart,
+  Activity,
+  Wind,
+  ShieldAlert,
+  FileText
 } from 'lucide-react';
 
 import elderlyWelcomeImg from '../../assets/elderly_welcome.png';
@@ -64,9 +80,30 @@ export const ElderlyDashboard = () => {
   const [healthInfo, setHealthInfo] = useState(null);
   const [caregiver, setCaregiver] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const [dailyStatus, setDailyStatus] = useState(null);
+  const [isVitalsModalOpen, setIsVitalsModalOpen] = useState(false);
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [isMedPassModalOpen, setIsMedPassModalOpen] = useState(false);
+  const [todayReport, setTodayReport] = useState(null);
+  const [activeHelpRequest, setActiveHelpRequest] = useState(null);
+
   const [bannerDismissed, setBannerDismissed] = useState(
     () => sessionStorage.getItem('hj_banner_dismissed') === '1'
   );
+  const [showNotifBanner, setShowNotifBanner] = useState(() => {
+    try {
+      const supported = typeof NotificationService?.isSupported === 'function'
+        ? NotificationService.isSupported()
+        : Boolean(NotificationService?.isSupported);
+      return Boolean(supported && typeof Notification !== 'undefined' && Notification.permission === 'default');
+    } catch {
+      return false;
+    }
+  });
 
   const loadHome = useCallback(async () => {
     setLoading(true);
@@ -77,6 +114,9 @@ export const ElderlyDashboard = () => {
       elderlyClientService.getEmergencyContacts(),
       elderlyClientService.getHealthInfo(),
       elderlyClientService.getCaregiver(),
+      elderlyClientService.getDailyStatus(),
+      elderlyClientService.getDailyReport(),
+      elderlyClientService.getHelpRequests(),
     ]);
     if (results[0].status === 'fulfilled') setProfile(results[0].value);
     if (results[1].status === 'fulfilled') setTodayCheckin(results[1].value);
@@ -84,10 +124,30 @@ export const ElderlyDashboard = () => {
     if (results[3].status === 'fulfilled') setContacts(results[3].value);
     if (results[4].status === 'fulfilled') setHealthInfo(results[4].value);
     if (results[5].status === 'fulfilled') setCaregiver(results[5].value);
+    if (results[6].status === 'fulfilled') {
+      const statusData = results[6].value;
+      setDailyStatus(statusData);
+      if (statusData.show_9am_reminder) {
+        setIsReminderModalOpen(true);
+      }
+    }
+    if (results[7].status === 'fulfilled') setTodayReport(results[7].value);
+    if (results[8].status === 'fulfilled' && results[8].value.length > 0) {
+      setActiveHelpRequest(results[8].value[0]);
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => { loadHome(); }, [loadHome]);
+
+  const handleAcknowledgeReminder = async () => {
+    try {
+      await elderlyClientService.acknowledgeReminder();
+    } catch (e) {
+      console.error(e);
+    }
+    setIsReminderModalOpen(false);
+  };
 
   const goHome = () => {
     setScreen('home');
@@ -185,6 +245,63 @@ export const ElderlyDashboard = () => {
         </button>
       </header>
 
+      {/* Free Web Push Notification Opt-in Prompt */}
+      {showNotifBanner && (
+        <div
+          className="card glass-card animate-fade-in"
+          style={{
+            marginBottom: '20px',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-xl)',
+            background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+            border: '2px solid #86efac',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '14px'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#059669', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Bell size={20} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#14532d' }}>
+                Enable Gentle Check-in & Pill Reminders
+              </div>
+              <div style={{ fontSize: '0.825rem', color: '#166534', marginTop: '2px' }}>
+                Receive pleasant screen chimes when it's time for check-in or taking your vitamins & pills (100% free).
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button
+              onClick={async () => {
+                const granted = await NotificationService.requestPermission();
+                if (granted) {
+                  NotificationService.showNotification("HomeJoy Daily Companion", {
+                    body: "Reminders active! We'll chime when it's time for check-in or medication."
+                  });
+                }
+                setShowNotifBanner(false);
+              }}
+              className="btn btn-primary btn-sm"
+              style={{ background: '#059669', borderColor: '#059669', fontWeight: 800, padding: '8px 16px' }}
+            >
+              Turn On Reminders
+            </button>
+            <button
+              onClick={() => setShowNotifBanner(false)}
+              style={{ background: 'transparent', border: 'none', color: '#166534', cursor: 'pointer', fontWeight: 700 }}
+            >
+              Maybe Later
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Hero Welcome Message Banner */}
       {!loading && (
         <section className="elderly-hero-card">
@@ -213,11 +330,22 @@ export const ElderlyDashboard = () => {
             </div>
 
             <div className="elderly-hero-image-wrap">
-              <img
-                src={elderlyWelcomeImg}
-                alt="Friendly senior resting comfortably at home"
-                className="elderly-hero-image"
-              />
+              <div 
+                style={{
+                  width: '120px',
+                  height: '120px',
+                  borderRadius: '30px',
+                  background: 'linear-gradient(135deg, #e0f2fe 0%, #f0fdfa 100%)',
+                  border: '2px solid #bae6fd',
+                  color: '#0284c7',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 12px 28px rgba(2, 132, 199, 0.15)'
+                }}
+              >
+                <ShieldCheck size={64} />
+              </div>
             </div>
           </div>
         </section>
@@ -265,15 +393,184 @@ export const ElderlyDashboard = () => {
         </div>
       )}
 
+      {/* Urgent Request Help Trigger Banner */}
+      {!loading && (
+        <section style={{ marginBottom: '24px' }}>
+          <div className="card glass-card" style={{
+            backgroundColor: activeHelpRequest && activeHelpRequest.status !== 'Resolved' ? '#fff1f2' : '#ffffff',
+            border: activeHelpRequest && activeHelpRequest.status !== 'Resolved' ? '2px solid #fda4af' : '1px solid var(--border)',
+            borderRadius: '20px',
+            padding: '20px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '52px', height: '52px', borderRadius: '16px',
+                backgroundColor: '#ffe4e6', color: '#e11d48',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(225, 29, 72, 0.2)'
+              }}>
+                <ShieldAlert size={28} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
+                  Need Immediate Assistance?
+                </h3>
+                <p style={{ fontSize: '0.86rem', color: '#64748b', margin: '2px 0 0 0' }}>
+                  {activeHelpRequest && activeHelpRequest.status !== 'Resolved' ? (
+                    <span style={{ color: '#be123c', fontWeight: 700 }}>
+                      Help Request Active — Caregiver status: <strong>{activeHelpRequest.status}</strong>
+                    </span>
+                  ) : (
+                    <span>Assigned Caregiver: <strong>{caregiver?.caregiver_name || 'Assigned Staff'}</strong></span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsHelpModalOpen(true)}
+              style={{
+                backgroundColor: '#e11d48',
+                color: '#ffffff',
+                border: 'none',
+                padding: '14px 28px',
+                borderRadius: '14px',
+                fontWeight: 800,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                boxShadow: '0 6px 18px rgba(225, 29, 72, 0.35)',
+                minHeight: '52px'
+              }}
+            >
+              <ShieldAlert size={22} />
+              <span>REQUEST HELP</span>
+            </button>
+          </div>
+        </section>
+      )}
+
+      {/* Today's Monitoring Section */}
+      {!loading && (
+        <section className="card glass-card" style={{ padding: '24px', borderRadius: '24px', marginBottom: '28px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Daily Senior Monitoring Workflow
+              </span>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: '2px 0 0 0' }}>
+                Today's Monitoring
+              </h2>
+            </div>
+
+            <div style={{
+              padding: '8px 18px', borderRadius: '20px', fontSize: '0.88rem', fontWeight: 800,
+              backgroundColor: dailyStatus?.overall_completed ? '#dcfce7' : '#fef3c7',
+              color: dailyStatus?.overall_completed ? '#15803d' : '#b45309',
+              display: 'flex', alignItems: 'center', gap: '8px'
+            }}>
+              {dailyStatus?.overall_completed ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
+              <span>{dailyStatus?.overall_completed ? "Today's monitoring completed" : `${dailyStatus?.items_remaining || 0} items remaining`}</span>
+            </div>
+          </div>
+
+          {/* 3 Main Monitoring Cards Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+            {/* Checkin Item */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '18px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <HeartPulse size={22} color="var(--primary)" />
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, padding: '3px 8px', borderRadius: '10px', backgroundColor: dailyStatus?.checkin_completed ? '#dcfce7' : '#fee2e2', color: dailyStatus?.checkin_completed ? '#166534' : '#991b1b' }}>
+                  {dailyStatus?.checkin_completed ? '✓ Completed' : '⏳ Pending'}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Daily Wellness Check-in</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
+                {dailyStatus?.today_checkin?.mood ? `Mood: ${dailyStatus.today_checkin.mood}` : 'Not logged today'}
+              </div>
+            </div>
+
+            {/* Blood Pressure Item */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '18px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <Heart size={22} color="#e11d48" />
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, padding: '3px 8px', borderRadius: '10px', backgroundColor: dailyStatus?.bp_completed ? '#dcfce7' : '#fee2e2', color: dailyStatus?.bp_completed ? '#166534' : '#991b1b' }}>
+                  {dailyStatus?.bp_completed ? '✓ Entered' : '⏳ Pending'}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Blood Pressure</div>
+              <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
+                {dailyStatus?.today_vitals?.systolic ? `${dailyStatus.today_vitals.systolic} / ${dailyStatus.today_vitals.diastolic} mmHg` : 'Not entered'}
+              </div>
+            </div>
+
+            {/* Oxygen Item */}
+            <div style={{ backgroundColor: '#f8fafc', padding: '18px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <Wind size={22} color="#0284c7" />
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, padding: '3px 8px', borderRadius: '10px', backgroundColor: dailyStatus?.oxygen_completed ? '#dcfce7' : '#fee2e2', color: dailyStatus?.oxygen_completed ? '#166534' : '#991b1b' }}>
+                  {dailyStatus?.oxygen_completed ? '✓ Entered' : '⏳ Pending'}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Oxygen Level</div>
+              <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
+                {dailyStatus?.today_vitals?.oxygen_saturation ? `${dailyStatus.today_vitals.oxygen_saturation} % SpO₂` : 'Not entered'}
+              </div>
+            </div>
+          </div>
+
+          {/* Actions Bar */}
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {!dailyStatus?.checkin_completed && (
+                <button onClick={() => setScreen('checkin')} className="btn btn-primary btn-sm" style={{ fontWeight: 700 }}>
+                  <HeartPulse size={16} />
+                  <span>Start Check-In</span>
+                </button>
+              )}
+
+              <button onClick={() => setIsVitalsModalOpen(true)} className="btn btn-secondary btn-sm" style={{ fontWeight: 700 }}>
+                <Activity size={16} />
+                <span>{dailyStatus?.vitals_completed ? "Edit Today's Vitals" : "Enter Today's Vitals"}</span>
+              </button>
+            </div>
+
+            <button onClick={() => setIsReportModalOpen(true)} className="btn btn-ghost btn-sm" style={{ fontWeight: 700, color: 'var(--primary)' }}>
+              <FileText size={16} />
+              <span>View Today's Report</span>
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Enhanced Wellness Status Strip */}
       {!loading && profile && (
         <section className="elderly-wellness-banner">
           <div className="elderly-wellness-left">
-            <img
-              src={dailyCheckinImg}
-              alt="Daily Wellness Check-in"
-              className="elderly-wellness-img"
-            />
+            <div 
+              style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '18px',
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #e8f5e9 100%)',
+                border: '2px solid #c8e6c9',
+                color: '#2e7d32',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 6px 16px rgba(46, 125, 50, 0.1)',
+                flexShrink: 0
+              }}
+            >
+              <HeartPulse size={32} />
+            </div>
             <div>
               <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--primary-hover)', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 Your Health & Wellness Status
@@ -308,7 +605,125 @@ export const ElderlyDashboard = () => {
         </section>
       )}
 
+      {/* Modals */}
+      <DailyReminderModal
+        isOpen={isReminderModalOpen}
+        onClose={handleAcknowledgeReminder}
+        pendingItems={dailyStatus?.pending_items || []}
+        onCompleteNow={(target) => {
+          if (target === 'checkin') {
+            setScreen('checkin');
+          } else if (target === 'vitals') {
+            setIsVitalsModalOpen(true);
+          } else if (!dailyStatus?.checkin_completed) {
+            setScreen('checkin');
+          } else {
+            setIsVitalsModalOpen(true);
+          }
+        }}
+      />
+
+      <VitalsModal
+        isOpen={isVitalsModalOpen}
+        onClose={() => setIsVitalsModalOpen(false)}
+        onVitalsSaved={loadHome}
+        initialVitals={dailyStatus?.today_vitals}
+      />
+
+      <RequestHelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
+        onRequestSent={loadHome}
+        assignedCaregiver={dailyStatus?.assigned_caregiver}
+      />
+
+      <DailyReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        report={todayReport}
+      />
+
+      <VoiceCheckInModal
+        isOpen={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onApplyCheckIn={(data) => {
+          console.log('Voice checkin data applied:', data);
+          setScreen('checkin');
+        }}
+      />
+
+      <MedPassModal
+        isOpen={isMedPassModalOpen}
+        onClose={() => setIsMedPassModalOpen(false)}
+        elderlyData={{ profile, healthInfo, contacts }}
+      />
+
       {loading && <LoadingState message="Loading your care dashboard..." size="lg" />}
+
+      {/* Standout Innovations Quick Trigger Bar */}
+      {!loading && (
+        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginBottom: '24px' }}>
+          <button
+            onClick={() => setIsVoiceModalOpen(true)}
+            className="pastel-card pastel-card-lavender"
+            style={{
+              padding: '18px 24px',
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              cursor: 'pointer',
+              textAlign: 'left'
+            }}
+          >
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#7c3aed', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={26} />
+            </div>
+            <div>
+              <span className="pastel-badge pastel-badge-lavender" style={{ fontSize: '0.72rem', padding: '2px 8px', marginBottom: '4px' }}>
+                AI VOICE & CARE COMPANION
+              </span>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#4c1d95', margin: 0 }}>
+                Chat with Joy AI Assistant 🎙️
+              </h3>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setIsMedPassModalOpen(true)}
+            className="pastel-card pastel-card-rose"
+            style={{
+              padding: '18px 24px',
+              borderRadius: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              cursor: 'pointer',
+              textAlign: 'left'
+            }}
+          >
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#e11d48', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ShieldAlert size={26} />
+            </div>
+            <div>
+              <span className="pastel-badge pastel-badge-rose" style={{ fontSize: '0.72rem', padding: '2px 8px', marginBottom: '4px' }}>
+                PARAMEDIC & SOS
+              </span>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#9f1239', margin: 0 }}>
+                MedPass Passport 🪪
+              </h3>
+            </div>
+          </button>
+        </section>
+      )}
+
+      {/* Standout Innovations: Smart Pill Companion & VitalsGuard Chart */}
+      {!loading && (
+        <>
+          <SmartPillCompanion />
+          <VitalsGuardChart />
+        </>
+      )}
 
       {/* Quick Summary Highlights */}
       {!loading && (
@@ -403,6 +818,16 @@ export const ElderlyDashboard = () => {
           </div>
         </>
       )}
+
+        {/* Global Floating AI Voice Assistant Trigger */}
+        <button
+          onClick={() => setIsVoiceModalOpen(true)}
+          className="floating-ai-trigger"
+          aria-label="Talk to Joy AI Assistant"
+        >
+          <Sparkles size={20} />
+          <span>Talk to Joy 🎙️</span>
+        </button>
         </div>
       </div>
     );
@@ -442,7 +867,7 @@ const MAIN_TILES = [
   { 
     id: 'emergency-contacts', 
     label: 'Emergency Contacts',  
-    desc: 'Instant emergency & family calls',
+    desc: 'Instant emergency & guardian calls',
     emoji: '🚑',  
     color: '#dc2626', 
     bg: '#fef2f2', 

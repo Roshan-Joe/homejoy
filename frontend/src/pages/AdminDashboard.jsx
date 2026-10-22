@@ -4,19 +4,15 @@ import api from '../services/api';
 
 import {
   LayoutDashboard, Users, HeartPulse, UserCheck, BarChart3,
-  Bell, Settings, Shield, Menu, X, RefreshCw, Lock, Stethoscope, HeartHandshake
+  Bell, Shield, Menu, X, RefreshCw
 } from 'lucide-react';
 
 import { AdminStatsCards } from '../components/admin/AdminStatsCards.jsx';
 import { UserManagementTab } from '../components/admin/UserManagementTab.jsx';
-import { RoleManagement } from './admin/RoleManagement.jsx';
 import { ElderlyManagementTab } from '../components/admin/ElderlyManagementTab.jsx';
 import { CaregiverManagementTab } from '../components/admin/CaregiverManagementTab.jsx';
-import { DoctorManagement } from './admin/DoctorManagement.jsx';
-import { FamilyManagement } from './admin/FamilyManagement.jsx';
 import { AnalyticsTab } from '../components/admin/AnalyticsTab.jsx';
 import { NotificationsTab } from '../components/admin/NotificationsTab.jsx';
-import { SettingsTab } from '../components/admin/SettingsTab.jsx';
 
 export const AdminDashboard = () => {
   const { user } = useAuth();
@@ -47,14 +43,10 @@ export const AdminDashboard = () => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard },
     { id: 'users', label: 'User Directory', icon: Users },
-    { id: 'roles', label: 'Role & RBAC Matrix', icon: Lock },
     { id: 'elderly', label: 'Elderly Residents', icon: HeartPulse },
     { id: 'caregivers', label: 'Caregivers & Nurses', icon: UserCheck },
-    { id: 'doctors', label: 'Physicians & Doctors', icon: Stethoscope },
-    { id: 'family', label: 'Family Associations', icon: HeartHandshake },
     { id: 'analytics', label: 'System Analytics', icon: BarChart3 },
     { id: 'notifications', label: 'Notifications & Alerts', icon: Bell },
-    { id: 'settings', label: 'Settings & DB Health', icon: Settings },
   ];
 
   const renderActiveTab = () => {
@@ -63,22 +55,14 @@ export const AdminDashboard = () => {
         return <AdminStatsCards stats={stats} loading={loadingStats} onNavigateTab={(tab) => setActiveTab(tab)} />;
       case 'users':
         return <UserManagementTab />;
-      case 'roles':
-        return <RoleManagement />;
       case 'elderly':
         return <ElderlyManagementTab />;
       case 'caregivers':
         return <CaregiverManagementTab />;
-      case 'doctors':
-        return <DoctorManagement />;
-      case 'family':
-        return <FamilyManagement />;
       case 'analytics':
         return <AnalyticsTab />;
       case 'notifications':
         return <NotificationsTab />;
-      case 'settings':
-        return <SettingsTab />;
       default:
         return <AdminStatsCards stats={stats} loading={loadingStats} onNavigateTab={(tab) => setActiveTab(tab)} />;
     }
