@@ -312,34 +312,7 @@ export const RegisterPage = () => {
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#0b1f28', marginBottom: '6px' }}>
-                  Account Role
-                </label>
-                <select
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  style={{
-                    width: '100%',
-                    padding: '12px 18px',
-                    borderRadius: '9999px',
-                    border: '1px solid #e2e8f0',
-                    fontSize: '0.95rem',
-                    outline: 'none',
-                    backgroundColor: '#ffffff'
-                  }}
-                >
-                  <option value="Elderly">Elderly / Senior Resident</option>
-                  <option value="Caregiver">Caregiver</option>
-                </select>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '6px' }}>
-                  * Public signup is available for Elderly and Caregiver roles. Administrative and Doctor roles must be provisioned by an Administrator.
-                </div>
-              </div>
-
-              {/* Guardian / Family Contact Fields (Required for Elderly registration) */}
-              {formData.role === 'Elderly' && (
+              {/* Guardian / Family Contact Fields (Mandatory for Elderly registration) */}
                 <div style={{
                   padding: '16px',
                   backgroundColor: '#f0fdf4',
@@ -470,7 +443,6 @@ export const RegisterPage = () => {
                     </span>
                   </label>
                 </div>
-              )}
 
               <button
                 type="submit"
@@ -490,6 +462,15 @@ export const RegisterPage = () => {
               >
                 {submitting ? 'Creating Account...' : 'Create Account'}
               </button>
+
+              <div style={{
+                fontSize: '0.78rem',
+                color: '#64748b',
+                textAlign: 'center',
+                marginTop: '4px'
+              }}>
+                * Caregiver and clinical staff accounts are provisioned exclusively by facility administrators.
+              </div>
             </form>
 
             {/* Privacy Disclaimer Footer */}
