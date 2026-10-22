@@ -184,15 +184,99 @@ def _validate_phone(v: Optional[str]) -> Optional[str]:
     return v
 
 
+def parse_legacy_intake_time(intake_time: Optional[str]) -> List[str]:
+    """
+    Parses legacy intake_time strings into sorted 24h 'HH:MM' strings.
+    Supports formats like '8:00 AM', '1:00 PM', '8:00 AM, 8:00 PM', '08:00',
+    'Morning', 'Afternoon', 'Evening', 'Night', etc.
+    """
+    if not intake_time or not str(intake_time).strip():
+        return []
+
+    text = str(intake_time).strip()
+    named_slots = {
+        "morning": "08:00",
+        "breakfast": "08:00",
+        "afternoon": "13:00",
+        "lunch": "13:00",
+        "evening": "18:30",
+        "dinner": "19:30",
+        "night": "21:30",
+        "bedtime": "21:30"
+    }
+
+    parts = re.split(r"[,;]|\band\b", text, flags=re.IGNORECASE)
+    results = set()
+
+    for part in parts:
+        p = part.strip()
+        if not p:
+            continue
+        p_lower = p.lower()
+        if p_lower in named_slots:
+            results.add(named_slots[p_lower])
+            continue
+
+        p_norm = re.sub(r"\s+", " ", p)
+        for fmt in ("%I:%M %p", "%I:%M%p", "%I %p", "%I%p", "%H:%M", "%H"):
+            try:
+                t = datetime.strptime(p_norm.upper(), fmt).time()
+                results.add(f"{t.hour:02d}:{t.minute:02d}")
+                break
+            except ValueError:
+                pass
+
+    return sorted(list(results))
+
+
 class MedicationCreate(BaseModel):
     medicine_name: str = Field(..., min_length=1, max_length=200)
-    dosage: str = Field(..., min_length=1, max_length=100, example="10mg")
-    frequency: str = Field(..., example="Once daily")
-    intake_time: Optional[str] = Field(None, max_length=100, example="8:00 AM")
+    dosage: str = Field(..., min_length=1, max_length=100, json_schema_extra={"example": "10mg"})
+    frequency: str = Field(..., json_schema_extra={"example": "Once daily"})
+    intake_time: Optional[str] = Field(None, max_length=100, json_schema_extra={"example": "8:00 AM"})
+    times: List[str] = Field(default_factory=list, description="Scheduled times in 24h HH:MM format (max 6)")
+    days_of_week: List[int] = Field(default_factory=lambda: [0, 1, 2, 3, 4, 5, 6], description="Days of week: 0=Mon, 6=Sun")
     before_food: bool = Field(default=True)   # True = Before food, False = After food
     prescribed_by: Optional[str] = Field(None, max_length=200)
-    start_date: str = Field(..., example="2026-01-01")
-    end_date: Optional[str] = Field(None, example="2026-12-31")
+    start_date: str = Field(..., json_schema_extra={"example": "2026-01-01"})
+    end_date: Optional[str] = Field(None, json_schema_extra={"example": "2026-12-31"})
+
+    @field_validator("times", mode="before")
+    @classmethod
+    def validate_times(cls, v, info):
+        if v is None or (isinstance(v, list) and len(v) == 0):
+            # Check if legacy intake_time is present
+            intake = info.data.get("intake_time") if hasattr(info, "data") else None
+            v = parse_legacy_intake_time(intake) if intake else []
+        elif isinstance(v, str):
+            v = [v]
+
+        if not isinstance(v, list):
+            raise ValueError("times must be a list of 24-hour 'HH:MM' strings.")
+        if len(v) > 6:
+            raise ValueError("At most 6 scheduled times per day are allowed.")
+
+        time_regex = re.compile(r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")
+        clean_times = set()
+        for t in v:
+            if not isinstance(t, str) or not time_regex.match(t.strip()):
+                raise ValueError(f"Invalid time format '{t}'. Must be 24-hour 'HH:MM' format.")
+            clean_times.add(t.strip())
+        return sorted(list(clean_times))
+
+    @field_validator("days_of_week", mode="before")
+    @classmethod
+    def validate_days_of_week(cls, v):
+        if v is None or (isinstance(v, list) and len(v) == 0):
+            return [0, 1, 2, 3, 4, 5, 6]
+        if not isinstance(v, list):
+            raise ValueError("days_of_week must be a list of integers from 0 to 6.")
+        clean_days = set()
+        for d in v:
+            if not isinstance(d, int) or d < 0 or d > 6:
+                raise ValueError("days_of_week elements must be integers from 0 (Monday) to 6 (Sunday).")
+            clean_days.add(d)
+        return sorted(list(clean_days))
 
     @field_validator("start_date", "end_date")
     @classmethod
@@ -221,10 +305,45 @@ class MedicationUpdate(BaseModel):
     dosage: Optional[str] = Field(None, max_length=100)
     frequency: Optional[str] = None
     intake_time: Optional[str] = Field(None, max_length=100)
+    times: Optional[List[str]] = None
+    days_of_week: Optional[List[int]] = None
     before_food: Optional[bool] = None
     prescribed_by: Optional[str] = Field(None, max_length=200)
     start_date: Optional[str] = None
     end_date: Optional[str] = None
+
+    @field_validator("times", mode="before")
+    @classmethod
+    def validate_times(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, str):
+            v = [v]
+        if not isinstance(v, list):
+            raise ValueError("times must be a list of 24-hour 'HH:MM' strings.")
+        if len(v) > 6:
+            raise ValueError("At most 6 scheduled times per day are allowed.")
+        time_regex = re.compile(r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")
+        clean_times = set()
+        for t in v:
+            if not isinstance(t, str) or not time_regex.match(t.strip()):
+                raise ValueError(f"Invalid time format '{t}'. Must be 24-hour 'HH:MM' format.")
+            clean_times.add(t.strip())
+        return sorted(list(clean_times))
+
+    @field_validator("days_of_week", mode="before")
+    @classmethod
+    def validate_days_of_week(cls, v):
+        if v is None:
+            return v
+        if not isinstance(v, list):
+            raise ValueError("days_of_week must be a list of integers from 0 to 6.")
+        clean_days = set()
+        for d in v:
+            if not isinstance(d, int) or d < 0 or d > 6:
+                raise ValueError("days_of_week elements must be integers from 0 (Monday) to 6 (Sunday).")
+            clean_days.add(d)
+        return sorted(list(clean_days))
 
 
 class MedicationResponse(BaseModel):
@@ -234,6 +353,8 @@ class MedicationResponse(BaseModel):
     dosage: str
     frequency: str
     intake_time: Optional[str] = ""
+    times: List[str] = []
+    days_of_week: List[int] = [0, 1, 2, 3, 4, 5, 6]
     before_food: bool = True
     prescribed_by: Optional[str] = ""
     start_date: str
@@ -242,8 +363,39 @@ class MedicationResponse(BaseModel):
     updated_at: str
 
 
+class TakeDosePayload(BaseModel):
+    scheduled_time: str = Field(..., pattern=r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", json_schema_extra={"example": "08:00"})
+
+
+class UndoDosePayload(BaseModel):
+    scheduled_time: str = Field(..., pattern=r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", json_schema_extra={"example": "08:00"})
+
+
+class DoseSlotResponse(BaseModel):
+    med_id: str
+    name: str
+    dosage: str
+    scheduled_time: str
+    slot: str  # Morning | Afternoon | Evening | Night
+    state: str  # upcoming | due | taken | taken_late | missed | skipped
+    opens_at: str
+    closes_at: str
+    taken_at: Optional[str] = None
+    late_minutes: Optional[int] = 0
+    source: Optional[str] = None
+    before_food: bool = True
+    prescribed_by: Optional[str] = ""
+
+
+class DoseAdherenceResponse(BaseModel):
+    today_taken: int
+    today_total: int
+    seven_day_percentage: float
+    streak_days: int
+
+
 class DoseLogRequest(BaseModel):
-    status: str = Field(..., example="taken")  # "taken" or "missed"
+    status: str = Field(..., json_schema_extra={"example": "taken"})  # "taken" or "missed"
     medicine_name: Optional[str] = "Medication"
     dosage: Optional[str] = ""
     intake_time: Optional[str] = ""

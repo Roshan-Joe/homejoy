@@ -34,10 +34,11 @@ notifications_collection = db["notifications"]  # shared with admin send side
 alerts_collection = db["alerts"]
 caregiver_tasks_collection = db["caregiver_tasks"]
 
-# --- Daily Vitals & Urgent Help Collections ---
+# --- Daily Vitals, Urgent Help & Medication Dose Logs ---
 vitals_collection = db["vitals"]
 help_requests_collection = db["help_requests"]
 report_email_logs_collection = db["report_email_logs"]
+dose_logs_collection = db["dose_logs"]
 
 
 def init_db_indexes():
@@ -69,6 +70,14 @@ def init_db_indexes():
         alerts_collection.create_index("caregiver_id")
         notifications_collection.create_index("target_role")
         medications_collection.create_index("user_id")
+
+        # Dose logs: Unique compound index on (med_id, scheduled_date, scheduled_time)
+        dose_logs_collection.create_index(
+            [("med_id", 1), ("scheduled_date", 1), ("scheduled_time", 1)],
+            unique=True
+        )
+        dose_logs_collection.create_index([("user_id", 1), ("scheduled_date", 1)])
+        dose_logs_collection.create_index("status")
 
         print("[OK] Production database indexes verified and created.")
     except Exception as e:

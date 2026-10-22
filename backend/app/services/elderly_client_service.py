@@ -29,6 +29,7 @@ from app.schemas.elderly_client_schema import (
     HospitalInfoUpdate,
     MedicationCreate,
     MedicationUpdate,
+    parse_legacy_intake_time,
     EmergencyContactCreate,
     EmergencyContactUpdate,
     CheckInCreate,
@@ -151,6 +152,15 @@ def _serialize_profile(doc: Dict[str, Any], user: Dict[str, Any]) -> Dict[str, A
 
 
 def _serialize_medication(doc: Dict[str, Any]) -> Dict[str, Any]:
+    times = doc.get("times")
+    if times is None:
+        legacy_intake = doc.get("intake_time", "")
+        times = parse_legacy_intake_time(legacy_intake)
+
+    days_of_week = doc.get("days_of_week")
+    if days_of_week is None:
+        days_of_week = [0, 1, 2, 3, 4, 5, 6]
+
     return {
         "id": str(doc["_id"]),
         "user_id": str(doc.get("user_id", "")),
@@ -158,6 +168,8 @@ def _serialize_medication(doc: Dict[str, Any]) -> Dict[str, Any]:
         "dosage": doc.get("dosage", ""),
         "frequency": doc.get("frequency", ""),
         "intake_time": doc.get("intake_time", ""),
+        "times": times,
+        "days_of_week": days_of_week,
         "before_food": doc.get("before_food", True),
         "prescribed_by": doc.get("prescribed_by", ""),
         "start_date": doc.get("start_date", ""),
@@ -511,12 +523,20 @@ class ElderlyClientService:
     @staticmethod
     def add_medication(user: Dict[str, Any], payload: MedicationCreate) -> Dict[str, Any]:
         now_iso = datetime.now(timezone.utc).isoformat()
+        times = payload.times
+        if not times and payload.intake_time:
+            times = parse_legacy_intake_time(payload.intake_time)
+
+        days_of_week = payload.days_of_week if payload.days_of_week is not None else [0, 1, 2, 3, 4, 5, 6]
+
         doc = {
             "user_id": user["id"],
             "medicine_name": payload.medicine_name.strip(),
             "dosage": payload.dosage.strip(),
             "frequency": payload.frequency,
             "intake_time": payload.intake_time or "",
+            "times": times,
+            "days_of_week": days_of_week,
             "before_food": payload.before_food,
             "prescribed_by": payload.prescribed_by or "",
             "start_date": payload.start_date,
@@ -559,6 +579,12 @@ class ElderlyClientService:
             updates["frequency"] = payload.frequency
         if payload.intake_time is not None:
             updates["intake_time"] = payload.intake_time
+        if payload.times is not None:
+            updates["times"] = payload.times
+        elif payload.intake_time is not None:
+            updates["times"] = parse_legacy_intake_time(payload.intake_time)
+        if payload.days_of_week is not None:
+            updates["days_of_week"] = payload.days_of_week
         if payload.before_food is not None:
             updates["before_food"] = payload.before_food
         if payload.prescribed_by is not None:
