@@ -126,3 +126,22 @@ class CaregiverSettingsUpdatePayload(BaseModel):
 class CaregiverPasswordChangePayload(BaseModel):
     current_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=6)
+
+class SendDailyReportEmailPayload(BaseModel):
+    date: Optional[str] = Field(default=None, description="Report date in YYYY-MM-DD format (defaults to today IST)")
+    note: Optional[str] = Field(default=None, max_length=300, description="Optional caregiver note to include in email")
+    resend: Optional[bool] = Field(default=False, description="Explicit flag allowing re-send if already sent today (max 3/day)")
+
+class DailyReportEmailStatusResponse(BaseModel):
+    elderly_id: str
+    date: str
+    sent_today: bool
+    send_count: int
+    last_sent_at: Optional[str] = None
+    guardian_email_masked: Optional[str] = None
+    guardian_name: Optional[str] = None
+    guardian_relationship: Optional[str] = None
+    guardian_report_consent: bool = False
+    guardian_report_enabled: bool = True
+    can_send: bool = True
+    reason: Optional[str] = None

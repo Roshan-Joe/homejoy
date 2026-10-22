@@ -16,7 +16,8 @@ from app.database import (
     alerts_collection,
     caregiver_tasks_collection,
     doctors_collection,
-    daily_reports_collection
+    daily_reports_collection,
+    report_email_logs_collection
 )
 from app.models.caregiver_model import serialize_caregiver_doc
 from app.schemas.caregiver_portal_schema import (
@@ -24,7 +25,9 @@ from app.schemas.caregiver_portal_schema import (
     CaregiverTaskCreatePayload,
     CaregiverTaskUpdatePayload,
     CaregiverSettingsUpdatePayload,
-    CaregiverPasswordChangePayload
+    CaregiverPasswordChangePayload,
+    SendDailyReportEmailPayload,
+    DailyReportEmailStatusResponse
 )
 from app.security import verify_password, get_password_hash
 
@@ -1207,3 +1210,225 @@ class CaregiverPortalService:
         )
 
         return prefs
+
+    # ---------------------------------------------------------------------------
+    # 13. Assigned Elderly Daily Reports & Urgent Help Requests
+    # ---------------------------------------------------------------------------
+
+    @staticmethod
+    def get_assigned_daily_reports(current_user: Dict[str, Any], date_str: Optional[str] = None, elderly_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        assigned_ids = cg_context["assigned_elderly_ids"]
+        cg_id = cg_context["caregiver_id"]
+        cg_user_id = cg_context["user_id"]
+
+        from app.database import daily_reports_collection
+        from app.services.daily_report_service import get_today_ist_str
+
+        target_date = date_str or get_today_ist_str()
+        query = {
+            "date": target_date,
+            "$or": [
+                {"assigned_caregiver_id": cg_id},
+                {"assigned_caregiver_id": cg_user_id},
+                {"elderly_id": {"$in": assigned_ids}},
+                {"user_id": {"$in": assigned_ids}}
+            ]
+        }
+
+        if elderly_id:
+            CaregiverPortalService._verify_elderly_assigned(cg_context, elderly_id)
+            query["$and"] = [{"$or": [{"elderly_id": elderly_id}, {"user_id": elderly_id}]}]
+
+        cursor = list(daily_reports_collection.find(query).sort("generated_at", -1))
+        reports = []
+        for r in cursor:
+            r["id"] = str(r["_id"])
+            reports.append(r)
+        return reports
+
+    @staticmethod
+    def get_assigned_elderly_daily_report(current_user: Dict[str, Any], elderly_id: str, date_str: Optional[str] = None) -> Dict[str, Any]:
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        elderly_doc = CaregiverPortalService._verify_elderly_assigned(cg_context, elderly_id)
+        eld_user_id = elderly_doc.get("user_id") or str(elderly_doc["_id"])
+
+        from app.services.daily_report_service import DailyReportService
+        return DailyReportService.get_daily_report(eld_user_id, date_str)
+
+    @staticmethod
+    def get_help_requests(current_user: Dict[str, Any], status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        from app.services.help_request_service import HelpRequestService
+        return HelpRequestService.get_caregiver_help_requests(cg_context, status_filter)
+
+    @staticmethod
+    def acknowledge_help_request(current_user: Dict[str, Any], request_id: str) -> Dict[str, Any]:
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        from app.services.help_request_service import HelpRequestService
+        return HelpRequestService.acknowledge_help_request(request_id, cg_context)
+
+    @staticmethod
+    def resolve_help_request(current_user: Dict[str, Any], request_id: str, note: str = "") -> Dict[str, Any]:
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        from app.services.help_request_service import HelpRequestService
+        return HelpRequestService.resolve_help_request(request_id, cg_context, note)
+
+    @staticmethod
+    def send_daily_report_email(
+        current_user: Dict[str, Any],
+        elderly_id: str,
+        payload: SendDailyReportEmailPayload,
+        background_tasks: Any = None
+    ) -> Dict[str, Any]:
+        """
+        Sends daily wellness report to the elderly resident's guardian.
+        Rules:
+        - Caregiver must be assigned to that elderly (reuse _verify_elderly_assigned); otherwise 403.
+        - Reject if guardian_email is missing, guardian_report_enabled is false, or consent is false (400).
+        - Allow only ONE send per elderly per date, unless payload.resend=true, in which case allow at most 3 total per day.
+        - Logs attempt in report_email_logs without storing report body.
+        - Dispatches via FastAPI BackgroundTasks so the request does not block.
+        """
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        elderly_doc = CaregiverPortalService._verify_elderly_assigned(cg_context, elderly_id)
+
+        from app.services.daily_report_service import get_today_ist_str
+        from app.services.email_service import mask_email, send_daily_report_to_guardian_sync
+
+        target_date = payload.date.strip() if payload.date and payload.date.strip() else get_today_ist_str()
+        
+        guardian_email = (elderly_doc.get("guardian_email") or "").strip()
+        guardian_name = (elderly_doc.get("guardian_name") or "Guardian").strip()
+        consent = bool(elderly_doc.get("guardian_report_consent", False))
+        enabled = bool(elderly_doc.get("guardian_report_enabled", True))
+
+        if not guardian_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot send report: This patient does not have a guardian email registered."
+            )
+        if not consent:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot send report: The guardian has not consented to receive daily wellness reports."
+            )
+        if not enabled:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot send report: Guardian reports are currently disabled for this patient."
+            )
+
+        eld_pk = str(elderly_doc["_id"])
+        
+        # Check rate limits in report_email_logs
+        sent_query = {"elderly_id": eld_pk, "date": target_date, "status": "sent"}
+        sent_count = report_email_logs_collection.count_documents(sent_query)
+
+        if sent_count >= 1 and not payload.resend:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Daily report email for {target_date} has already been sent to {mask_email(guardian_email)}. To send again, please enable resend."
+            )
+        if sent_count >= 3:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Daily report email limit reached for {target_date} (maximum 3 emails per day)."
+            )
+
+        cg_name = current_user.get("full_name") or current_user.get("name") or "Assigned Caregiver"
+        cg_id = cg_context["caregiver_id"]
+
+        if background_tasks:
+            background_tasks.add_task(
+                send_daily_report_to_guardian_sync,
+                elderly_id=eld_pk,
+                caregiver_id=cg_id,
+                caregiver_name=cg_name,
+                target_date=target_date,
+                note=payload.note
+            )
+        else:
+            # Synchronous fallback for test harnesses or when background_tasks is None
+            send_daily_report_to_guardian_sync(
+                elderly_id=eld_pk,
+                caregiver_id=cg_id,
+                caregiver_name=cg_name,
+                target_date=target_date,
+                note=payload.note
+            )
+
+        return {
+            "status": "queued",
+            "message": f"Daily wellness report for {target_date} has been queued for delivery to {mask_email(guardian_email)}.",
+            "elderly_id": eld_pk,
+            "date": target_date,
+            "recipient_masked": mask_email(guardian_email),
+            "guardian_name": guardian_name,
+            "resend": bool(payload.resend),
+            "send_count": sent_count + 1
+        }
+
+    @staticmethod
+    def get_daily_report_email_status(
+        current_user: Dict[str, Any],
+        elderly_id: str,
+        date_str: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Returns status of guardian daily report email for the specified elderly client and date.
+        """
+        cg_context = CaregiverPortalService._get_caregiver_context(current_user)
+        elderly_doc = CaregiverPortalService._verify_elderly_assigned(cg_context, elderly_id)
+
+        from app.services.daily_report_service import get_today_ist_str
+        from app.services.email_service import mask_email
+
+        target_date = date_str.strip() if date_str and date_str.strip() else get_today_ist_str()
+        eld_pk = str(elderly_doc["_id"])
+
+        guardian_email = (elderly_doc.get("guardian_email") or "").strip()
+        guardian_name = elderly_doc.get("guardian_name")
+        guardian_relationship = elderly_doc.get("guardian_relationship")
+        consent = bool(elderly_doc.get("guardian_report_consent", False))
+        enabled = bool(elderly_doc.get("guardian_report_enabled", True))
+
+        logs = list(report_email_logs_collection.find(
+            {"elderly_id": eld_pk, "date": target_date}
+        ).sort("sent_at", 1))
+
+        sent_logs = [l for l in logs if l.get("status") == "sent"]
+        send_count = len(sent_logs)
+        sent_today = send_count > 0
+        last_sent_at = sent_logs[-1].get("sent_at") if sent_logs else None
+
+        can_send = True
+        reason = None
+
+        if not guardian_email:
+            can_send = False
+            reason = "No guardian email address registered"
+        elif not consent:
+            can_send = False
+            reason = "Guardian consent not granted"
+        elif not enabled:
+            can_send = False
+            reason = "Guardian reports are disabled"
+        elif send_count >= 3:
+            can_send = False
+            reason = "Daily limit of 3 emails reached"
+
+        return {
+            "elderly_id": eld_pk,
+            "date": target_date,
+            "sent_today": sent_today,
+            "send_count": send_count,
+            "last_sent_at": last_sent_at,
+            "guardian_email_masked": mask_email(guardian_email) if guardian_email else None,
+            "guardian_name": guardian_name,
+            "guardian_relationship": guardian_relationship,
+            "guardian_report_consent": consent,
+            "guardian_report_enabled": enabled,
+            "can_send": can_send,
+            "reason": reason
+        }

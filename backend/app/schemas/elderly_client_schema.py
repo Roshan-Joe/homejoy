@@ -4,7 +4,7 @@ All schemas here are used exclusively by elderly-user-facing endpoints
 (/api/elderly/me/...). They are separate from the admin-facing schemas
 in elderly_schema.py which are used by admin-only routes.
 """
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import Optional, List, Dict, Any
 import re
 from datetime import date, datetime
