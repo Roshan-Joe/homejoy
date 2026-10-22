@@ -31,6 +31,16 @@ export const elderlyClientService = {
   deleteMedication: (id) => api.delete(`${BASE}/medications/${id}`).then(r => r.data),
   logMedicationDose: (id, payload) => api.post(`${BASE}/medications/${id}/log-dose`, payload).then(r => r.data),
 
+  // --- Smart Pill Time-Window Doses ---
+  getTodayMedicationSlots: (date) =>
+    api.get(`${BASE}/medications/today`, { params: date ? { date } : {} }).then(r => r.data),
+  takeMedicationDose: (medId, scheduledTime) =>
+    api.post(`${BASE}/medications/${medId}/take`, { scheduled_time: scheduledTime }).then(r => r.data),
+  undoMedicationDose: (medId, scheduledTime) =>
+    api.post(`${BASE}/medications/${medId}/undo`, { scheduled_time: scheduledTime }).then(r => r.data),
+  getMedicationAdherence: (days = 7) =>
+    api.get(`${BASE}/medications/adherence`, { params: { days } }).then(r => r.data),
+
 
   // --- Emergency Contacts ---
   getEmergencyContacts: () => api.get(`${BASE}/emergency-contacts`).then(r => r.data),

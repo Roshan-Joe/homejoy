@@ -7,6 +7,7 @@ import caregiverPortalService from '../../services/caregiverPortalService';
 import { WellnessRiskBadge } from '../../components/elderly/WellnessRiskBadge';
 import { CareReportExportModal } from '../../components/caregiver/CareReportExportModal';
 import { GuardianDailyReportCard } from '../../components/caregiver/GuardianDailyReportCard';
+import { CaregiverDoseTimeline } from '../../components/caregiver/CaregiverDoseTimeline';
 
 export const CaregiverElderlyDetailView = ({ elderlyId, onBack, onSendReminder }) => {
   const [data, setData] = useState(null);
@@ -416,50 +417,54 @@ export const CaregiverElderlyDetailView = ({ elderlyId, onBack, onSendReminder }
 
       {/* Medications Sub-Tab */}
       {activeSubTab === 'meds' && (
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 16px 0' }}>Assigned Medications Schedule</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <CaregiverDoseTimeline elderlyId={elderlyId} elderlyName={profile.full_name || profile.name} />
 
-          {medications.length === 0 ? (
-            <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
-              No medications currently registered for this client.
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
-                    <th style={{ padding: '10px 12px' }}>Medicine Name</th>
-                    <th style={{ padding: '10px 12px' }}>Dosage</th>
-                    <th style={{ padding: '10px 12px' }}>Frequency</th>
-                    <th style={{ padding: '10px 12px' }}>Intake Time</th>
-                    <th style={{ padding: '10px 12px' }}>Food Relation</th>
-                    <th style={{ padding: '10px 12px' }}>Adherence Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {medications.map((m) => (
-                    <tr key={m.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '12px', fontWeight: 600, color: '#1e293b' }}>{m.medicine_name}</td>
-                      <td style={{ padding: '12px' }}>{m.dosage}</td>
-                      <td style={{ padding: '12px' }}>{m.frequency}</td>
-                      <td style={{ padding: '12px' }}>{m.intake_time}</td>
-                      <td style={{ padding: '12px' }}>{m.food_relation}</td>
-                      <td style={{ padding: '12px' }}>
-                        <span style={{
-                          padding: '3px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600,
-                          background: m.status === 'taken' ? '#d1fae5' : (m.status === 'missed' ? '#fee2e2' : '#fef3c7'),
-                          color: m.status === 'taken' ? '#047857' : (m.status === 'missed' ? '#b91c1c' : '#b45309'),
-                          textTransform: 'capitalize'
-                        }}>
-                          {m.status}
-                        </span>
-                      </td>
+          <div className="glass-card" style={{ padding: '24px' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 16px 0' }}>All Registered Prescriptions</h3>
+
+            {medications.length === 0 ? (
+              <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                No medications currently registered for this client.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                  <thead>
+                    <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                      <th style={{ padding: '10px 12px' }}>Medicine Name</th>
+                      <th style={{ padding: '10px 12px' }}>Dosage</th>
+                      <th style={{ padding: '10px 12px' }}>Frequency</th>
+                      <th style={{ padding: '10px 12px' }}>Intake Time</th>
+                      <th style={{ padding: '10px 12px' }}>Food Relation</th>
+                      <th style={{ padding: '10px 12px' }}>Adherence Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {medications.map((m) => (
+                      <tr key={m.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '12px', fontWeight: 600, color: '#1e293b' }}>{m.medicine_name}</td>
+                        <td style={{ padding: '12px' }}>{m.dosage}</td>
+                        <td style={{ padding: '12px' }}>{m.frequency}</td>
+                        <td style={{ padding: '12px' }}>{m.intake_time}</td>
+                        <td style={{ padding: '12px' }}>{m.food_relation}</td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{
+                            padding: '3px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600,
+                            background: m.status === 'taken' ? '#d1fae5' : (m.status === 'missed' ? '#fee2e2' : '#fef3c7'),
+                            color: m.status === 'taken' ? '#047857' : (m.status === 'missed' ? '#b91c1c' : '#b45309'),
+                            textTransform: 'capitalize'
+                          }}>
+                            {m.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

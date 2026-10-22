@@ -60,7 +60,9 @@ export const MedicationsPage = ({ onBack }) => {
   const openAdd = () => { setForm({ ...emptyForm, intake_times: [''] }); setEditId(null); setShowForm(true); setError(''); setSuccess(''); };
   const openEdit = (med) => {
     const count = getDoseCount(med.frequency || 'Once daily');
-    const timesArray = parseTimesToArray(med.intake_time || '', count);
+    const timesArray = (med.times && med.times.length > 0)
+      ? med.times
+      : parseTimesToArray(med.intake_time || '', count);
     setForm({
       medicine_name: med.medicine_name,
       dosage: med.dosage,

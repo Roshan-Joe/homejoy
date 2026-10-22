@@ -720,7 +720,7 @@ export const ElderlyDashboard = () => {
       {/* Standout Innovations: Smart Pill Companion & VitalsGuard Chart */}
       {!loading && (
         <>
-          <SmartPillCompanion />
+          <SmartPillCompanion onNavigateMedications={() => setScreen('medications')} />
           <VitalsGuardChart />
         </>
       )}

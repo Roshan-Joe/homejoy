@@ -213,6 +213,20 @@ export const caregiverPortalService = {
     if (date) params.date = date;
     const response = await api.get(`/api/caregiver/elderly/${elderlyId}/daily-report/email-status`, { params });
     return response.data;
+  },
+
+  // --- Today's Live Medication Doses & Caregiver Verification ---
+  getElderlyTodayDoses: async (elderlyId, date = '') => {
+    const params = date ? { date } : {};
+    const response = await api.get(`/api/caregiver/me/elderly/${elderlyId}/doses/today`, { params });
+    return response.data;
+  },
+
+  caregiverTakeDose: async (elderlyId, medId, scheduledTime) => {
+    const response = await api.post(`/api/caregiver/me/elderly/${elderlyId}/medications/${medId}/take`, {
+      scheduled_time: scheduledTime
+    });
+    return response.data;
   }
 };
 
