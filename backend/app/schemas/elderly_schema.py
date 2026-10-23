@@ -1,7 +1,7 @@
 import re
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any
-from app.constants import KERALA_DISTRICTS, validate_district
+from app.constants import KERALA_DISTRICTS, DEFAULT_DISTRICT, validate_district
 
 class WellnessCheckinSchema(BaseModel):
     date: str = Field(..., json_schema_extra={"example": "2026-08-03"})
@@ -20,7 +20,7 @@ class ElderlyCreateSchema(BaseModel):
     date_of_birth: Optional[str] = Field(default="1954-04-12")
     gender: str = Field(default="Female", json_schema_extra={"example": "Female"})
     blood_group: str = Field(default="O+", json_schema_extra={"example": "O+"})
-    district: str = Field(..., json_schema_extra={"example": "Ernakulam"})
+    district: str = Field(default=DEFAULT_DISTRICT, json_schema_extra={"example": "Ernakulam"})
     address: Optional[str] = Field(default="")
     emergency_contact_name: Optional[str] = Field(default="Robert Vance")
     emergency_contact_phone: Optional[str] = Field(default="+1 (555) 987-6543")
@@ -31,7 +31,7 @@ class ElderlyCreateSchema(BaseModel):
     @field_validator("district")
     @classmethod
     def check_district(cls, v):
-        return validate_district(v, required=True)
+        return validate_district(v, required=False) or DEFAULT_DISTRICT
 
     # Guardian / Family Contact Fields
     guardian_name: Optional[str] = Field(default=None, example="David Vance")
