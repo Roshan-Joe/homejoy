@@ -284,86 +284,19 @@ class ElderlyService:
 
     @staticmethod
     def assign_caregiver(elderly_id: str, payload: AssignCaregiverSchema) -> Dict[str, Any]:
+        from app.services.assignment_service import AssignmentService
         try:
             obj_id = ObjectId(elderly_id)
         except InvalidId:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid ID format")
 
-        elderly_doc = elderly_collection.find_one({"_id": obj_id})
-        if not elderly_doc:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Elderly profile not found")
-
-        eld_pk_str = str(elderly_doc["_id"])
-        eld_user_id = str(elderly_doc.get("user_id", ""))
-        eld_name = elderly_doc.get("full_name") or elderly_doc.get("name", "Elderly Patient")
-
-        old_caregiver_id = elderly_doc.get("assigned_caregiver_id")
         new_caregiver_id = payload.caregiver_id.strip() if payload.caregiver_id and payload.caregiver_id.strip() else None
-        caregiver_name = "Not Assigned"
-        target_cg_profile = None
 
         if new_caregiver_id:
-            # Look up caregiver profile or user account
-            if ObjectId.is_valid(new_caregiver_id):
-                target_cg_profile = caregivers_collection.find_one({"_id": ObjectId(new_caregiver_id)})
-            if not target_cg_profile:
-                target_cg_profile = caregivers_collection.find_one({"user_id": new_caregiver_id})
-
-            if target_cg_profile:
-                caregiver_name = target_cg_profile.get("name") or target_cg_profile.get("full_name", "Caregiver Staff")
-            else:
-                # Fallback to users collection if profile was not yet generated
-                try:
-                    cg_user = users_collection.find_one({"_id": ObjectId(new_caregiver_id)})
-                    if cg_user:
-                        caregiver_name = cg_user.get("full_name") or cg_user.get("name", "Caregiver Staff")
-                except Exception:
-                    pass
-
-        # 1. Clean up old caregiver assignment if changed
-        if old_caregiver_id and old_caregiver_id != new_caregiver_id:
-            old_cg_query = {"$or": [
-                {"assigned_elderly_ids": eld_pk_str},
-                {"assigned_elderly_ids": eld_user_id}
-            ]}
-            if ObjectId.is_valid(old_caregiver_id):
-                old_cg_query["$or"].extend([{"_id": ObjectId(old_caregiver_id)}, {"user_id": old_caregiver_id}])
-            caregivers_collection.update_many(
-                old_cg_query,
-                {"$pull": {
-                    "assigned_elderly_ids": {"$in": [eld_pk_str, eld_user_id]},
-                    "assigned_elderly_names": eld_name
-                }}
-            )
-
-        # 2. Add elderly to new caregiver profile if assigned
-        if target_cg_profile:
-            caregivers_collection.update_one(
-                {"_id": target_cg_profile["_id"]},
-                {
-                    "$addToSet": {"assigned_elderly_ids": eld_pk_str},
-                    "$set": {"updatedAt": datetime.now(timezone.utc).isoformat()}
-                }
-            )
-            # Ensure name is also tracked
-            cg_current = caregivers_collection.find_one({"_id": target_cg_profile["_id"]})
-            names = list(cg_current.get("assigned_elderly_names", []))
-            if eld_name not in names:
-                names.append(eld_name)
-                caregivers_collection.update_one({"_id": target_cg_profile["_id"]}, {"$set": {"assigned_elderly_names": names}})
-
-        now_iso = datetime.now(timezone.utc).isoformat()
-        elderly_collection.update_one(
-            {"_id": obj_id},
-            {"$set": {
-                "assigned_caregiver_id": new_caregiver_id,
-                "assigned_caregiver_name": caregiver_name,
-                "updatedAt": now_iso
-            }}
-        )
-
-        updated_doc = elderly_collection.find_one({"_id": obj_id})
-        return serialize_elderly_doc(updated_doc)
+            return AssignmentService.assign(elderly_id=elderly_id, caregiver_id=new_caregiver_id)
+        else:
+            res = AssignmentService.unassign(elderly_id=elderly_id)
+            return res.get("elderly", {})
 
 
     @staticmethod

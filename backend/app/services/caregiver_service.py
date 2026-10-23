@@ -229,6 +229,7 @@ class CaregiverService:
 
     @staticmethod
     def assign_elderly_to_caregiver(caregiver_id: str, payload: CaregiverAssignElderlySchema) -> Dict[str, Any]:
+        from app.services.assignment_service import AssignmentService
         try:
             cg_obj_id = ObjectId(caregiver_id)
         except InvalidId:
@@ -239,53 +240,14 @@ class CaregiverService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Caregiver profile not found")
 
         elderly_id_str = payload.elderly_id.strip()
-        try:
-            eld_obj_id = ObjectId(elderly_id_str)
-            elderly_doc = elderly_collection.find_one({"_id": eld_obj_id})
-        except Exception:
-            elderly_doc = elderly_collection.find_one({"user_id": elderly_id_str})
-
-        if not elderly_doc:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Elderly patient profile not found")
-
-        eld_id = str(elderly_doc["_id"])
-        eld_name = elderly_doc.get("name") or elderly_doc.get("full_name", "Elderly Patient")
-
-        assigned_ids = caregiver_doc.get("assigned_elderly_ids", [])
-        assigned_names = caregiver_doc.get("assigned_elderly_names", [])
-
-        if eld_id not in assigned_ids:
-            assigned_ids.append(eld_id)
-            assigned_names.append(eld_name)
-
-        now_iso = datetime.now(timezone.utc).isoformat()
-        caregivers_collection.update_one(
-            {"_id": cg_obj_id},
-            {"$set": {
-                "assigned_elderly_ids": assigned_ids,
-                "assigned_elderly_names": assigned_names,
-                "updatedAt": now_iso
-            }}
-        )
-
-        # Update elderly profile bi-directionally
-        cg_user_id = caregiver_doc.get("user_id") or str(cg_obj_id)
-        cg_name = caregiver_doc.get("name") or caregiver_doc.get("full_name", "Caregiver Staff")
-
-        elderly_collection.update_one(
-            {"_id": elderly_doc["_id"]},
-            {"$set": {
-                "assigned_caregiver_id": cg_user_id,
-                "assigned_caregiver_name": cg_name,
-                "updatedAt": now_iso
-            }}
-        )
+        AssignmentService.assign(elderly_id=elderly_id_str, caregiver_id=caregiver_id)
 
         updated_cg = caregivers_collection.find_one({"_id": cg_obj_id})
         return serialize_caregiver_doc(updated_cg)
 
     @staticmethod
     def remove_elderly_from_caregiver(caregiver_id: str, payload: CaregiverAssignElderlySchema) -> Dict[str, Any]:
+        from app.services.assignment_service import AssignmentService
         try:
             cg_obj_id = ObjectId(caregiver_id)
         except InvalidId:
@@ -296,41 +258,7 @@ class CaregiverService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Caregiver profile not found")
 
         elderly_id_str = payload.elderly_id.strip()
-
-        assigned_ids = caregiver_doc.get("assigned_elderly_ids", [])
-        assigned_names = caregiver_doc.get("assigned_elderly_names", [])
-
-        new_ids = []
-        new_names = []
-        for i, id_val in enumerate(assigned_ids):
-            if id_val != elderly_id_str:
-                new_ids.append(id_val)
-                if i < len(assigned_names):
-                    new_names.append(assigned_names[i])
-
-        now_iso = datetime.now(timezone.utc).isoformat()
-        caregivers_collection.update_one(
-            {"_id": cg_obj_id},
-            {"$set": {
-                "assigned_elderly_ids": new_ids,
-                "assigned_elderly_names": new_names,
-                "updatedAt": now_iso
-            }}
-        )
-
-        # Update elderly profile bi-directionally
-        try:
-            eld_obj_id = ObjectId(elderly_id_str)
-            elderly_collection.update_one(
-                {"_id": eld_obj_id},
-                {"$set": {
-                    "assigned_caregiver_id": None,
-                    "assigned_caregiver_name": "Not Assigned",
-                    "updatedAt": now_iso
-                }}
-            )
-        except Exception:
-            pass
+        AssignmentService.unassign(elderly_id=elderly_id_str)
 
         updated_cg = caregivers_collection.find_one({"_id": cg_obj_id})
         return serialize_caregiver_doc(updated_cg)

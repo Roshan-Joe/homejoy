@@ -128,12 +128,9 @@ class CaregiverPortalService:
         cg_user_id = cg_context["user_id"]
         cg_profile_id = cg_context["caregiver_id"]
 
-        is_assigned = (
-            eld_pk in assigned_ids or
-            eld_user_id in assigned_ids or
-            str(elderly_doc.get("assigned_caregiver_id")) == cg_user_id or
-            str(elderly_doc.get("assigned_caregiver_id")) == cg_profile_id
-        )
+        # Single Source of Truth: Check elderly.assigned_caregiver_id authoritatively
+        assigned_cg_id = str(elderly_doc.get("assigned_caregiver_id") or "").strip()
+        is_assigned = bool(assigned_cg_id and assigned_cg_id != "Not Assigned" and assigned_cg_id in [cg_user_id, cg_profile_id])
 
         if not is_assigned:
             raise HTTPException(

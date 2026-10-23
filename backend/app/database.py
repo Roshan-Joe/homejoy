@@ -39,6 +39,7 @@ vitals_collection = db["vitals"]
 help_requests_collection = db["help_requests"]
 report_email_logs_collection = db["report_email_logs"]
 dose_logs_collection = db["dose_logs"]
+assignment_history_collection = db["assignment_history"]
 
 
 def init_db_indexes():
@@ -78,6 +79,12 @@ def init_db_indexes():
         )
         dose_logs_collection.create_index([("user_id", 1), ("scheduled_date", 1)])
         dose_logs_collection.create_index("status")
+
+        # Assignment History
+        assignment_history_collection.create_index("elderly_id")
+        assignment_history_collection.create_index("to_caregiver_id")
+        assignment_history_collection.create_index("from_caregiver_id")
+        assignment_history_collection.create_index([("timestamp", -1)])
 
         print("[OK] Production database indexes verified and created.")
     except Exception as e:

@@ -22,6 +22,9 @@ KERALA_DISTRICTS: List[str] = [
     "Other"
 ]
 
+DEFAULT_DISTRICT: str = "Other"
+DEFAULT_MAX_PATIENTS: int = 8
+
 def validate_district(v: Optional[str], required: bool = True) -> Optional[str]:
     """
     Validates that the provided district string exists in KERALA_DISTRICTS.
