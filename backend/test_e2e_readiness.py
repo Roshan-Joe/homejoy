@@ -104,15 +104,15 @@ class TestHomeJoyE2EReadiness(unittest.TestCase):
         self.assertEqual(res_eld.status_code, 201)
         self.assertEqual(res_eld.json()["user"]["role"], "Elderly")
 
-        # Valid self-registration as Caregiver
+        # Attempt to self-register as Caregiver (restricted to Admin provisioning)
         res_cg = self.client.post("/api/auth/register", json={
             "full_name": "Self-Reg Caregiver",
             "email": "e2e_caregiver_self@homejoy.com",
             "password": "Password123!",
             "role": "Caregiver"
         })
-        self.assertEqual(res_cg.status_code, 201)
-        self.assertEqual(res_cg.json()["user"]["role"], "Caregiver")
+        self.assertEqual(res_cg.status_code, 403)
+        self.assertIn("restricted", res_cg.json()["detail"].lower())
 
     def test_03_admin_provisions_caregiver_and_elderly(self):
         """Admin provisions Caregiver and Elderly, then assigns Caregiver with bidirectional sync"""

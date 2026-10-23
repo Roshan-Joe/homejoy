@@ -9,7 +9,15 @@ from app.security import get_password_hash, verify_password, create_access_token
 from app.config import GOOGLE_CLIENT_ID
 
 
+import time
+from typing import Dict, List
+
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+
+# In-memory tracking for failed login attempts to support rate-limiting (429)
+FAILED_LOGIN_ATTEMPTS: Dict[str, List[float]] = {}
+MAX_LOGIN_ATTEMPTS = 5
+LOCKOUT_WINDOW_SECONDS = 60
 
 @router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
 def register(user_data: UserCreate):
@@ -19,21 +27,19 @@ def register(user_data: UserCreate):
     existing_user = users_collection.find_one({"email": email_clean})
     if existing_user:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Email address is already registered"
         )
     
-    # Enforce role boundaries: Public self-registration is strictly restricted to Elderly and Caregiver.
-    # Admin, Doctor, and other administrative roles must be provisioned by System Administrator.
+    # Enforce role boundaries: Public self-registration is strictly restricted to Elderly.
+    # Caregivers, Doctors, and Admin roles must be provisioned by System Administrator.
     requested_role = (user_data.role or "Elderly").strip()
-    clean_role_lower = requested_role.lower()
-    if clean_role_lower not in ["elderly", "caregiver"]:
+    if requested_role.lower() != "elderly":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Self-registration for '{requested_role}' is restricted. Only Elderly and Caregiver accounts can self-register. Admin and other roles must be provisioned by an Administrator."
+            detail=f"Self-registration for '{requested_role}' is restricted. Only Elderly accounts can be registered publicly. Caregiver and Administrator accounts must be created by an administrator."
         )
-
-    canonical_role = "Caregiver" if clean_role_lower == "caregiver" else "Elderly"
+    canonical_role = "Elderly"
 
     # Hash password & construct user doc
     hashed_pwd = get_password_hash(user_data.password)
@@ -94,14 +100,32 @@ def register(user_data: UserCreate):
 @router.post("/login", response_model=Token)
 def login(login_data: UserLogin):
     email_clean = login_data.email.lower().strip()
+    now = time.time()
+
+    # Rate limiting & lockout guard
+    attempts = FAILED_LOGIN_ATTEMPTS.get(email_clean, [])
+    attempts = [t for t in attempts if now - t < LOCKOUT_WINDOW_SECONDS]
+    FAILED_LOGIN_ATTEMPTS[email_clean] = attempts
+
+    if len(attempts) >= MAX_LOGIN_ATTEMPTS:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts, try again in a minute"
+        )
+
     user = users_collection.find_one({"email": email_clean})
     
-    if not user or not verify_password(login_data.password, user["hashed_password"]):
+    if not user or not verify_password(login_data.password, user.get("hashed_password", "")):
+        FAILED_LOGIN_ATTEMPTS[email_clean].append(now)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Email or password is incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Reset failed attempts on successful login
+    if email_clean in FAILED_LOGIN_ATTEMPTS:
+        FAILED_LOGIN_ATTEMPTS.pop(email_clean, None)
     
     # Check if account is active
     if not user.get("is_active", True):

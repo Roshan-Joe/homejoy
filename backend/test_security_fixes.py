@@ -49,7 +49,7 @@ class TestSecurityFixes(unittest.TestCase):
         self.assertIn("restricted", res.json()["detail"].lower())
 
     def test_03_public_signup_allows_elderly_and_caregiver(self):
-        """Public signup allows Elderly and Caregiver"""
+        """Public signup allows Elderly and rejects Caregiver (Caregiver provisioned by Admin)"""
         res_eld = self.client.post("/api/auth/register", json={
             "full_name": "Valid Elderly",
             "email": "sec_test_eld@test.com",
@@ -62,13 +62,13 @@ class TestSecurityFixes(unittest.TestCase):
         self.assertEqual(res_eld.json()["user"]["role"], "Elderly")
 
         res_cg = self.client.post("/api/auth/register", json={
-            "full_name": "Valid Caregiver",
+            "full_name": "Attempted Caregiver",
             "email": "sec_test_cg@test.com",
             "password": "Password123!",
             "role": "Caregiver"
         })
-        self.assertEqual(res_cg.status_code, 201)
-        self.assertEqual(res_cg.json()["user"]["role"], "Caregiver")
+        self.assertEqual(res_cg.status_code, 403)
+        self.assertIn("restricted", res_cg.json()["detail"].lower())
 
     # 2. Seed-Admin Route Removed
     def test_04_seed_admin_route_is_removed(self):

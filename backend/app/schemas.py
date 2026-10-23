@@ -1,12 +1,18 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any
 import re
+import unicodedata
+
+COMMON_PASSWORDS = {
+    "password", "12345678", "123456789", "qwerty123", "password123", "admin123",
+    "homejoy123", "welcome123", "letmein123", "iloveyou", "secret123"
+}
 
 class UserCreate(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100, json_schema_extra={"example": "John Doe"})
     email: EmailStr = Field(..., json_schema_extra={"example": "johndoe@example.com"})
-    password: str = Field(..., min_length=6, json_schema_extra={"example": "password123"})
-    role: str = Field(default="Elderly", json_schema_extra={"example": "Elderly"}) # Only "Elderly" or "Caregiver" allowed on public signup
+    password: str = Field(..., min_length=8, max_length=72, json_schema_extra={"example": "Password123"})
+    role: str = Field(default="Elderly", json_schema_extra={"example": "Elderly"})
 
     # Guardian / Family Contact Fields (Mandatory for Elderly role registration)
     guardian_name: Optional[str] = None
@@ -15,6 +21,31 @@ class UserCreate(BaseModel):
     guardian_email: Optional[EmailStr] = None
     guardian_report_consent: Optional[bool] = False
     guardian_report_enabled: Optional[bool] = None
+
+    @field_validator("full_name")
+    @classmethod
+    def validate_full_name(cls, v):
+        v_clean = v.strip()
+        if not (2 <= len(v_clean) <= 100):
+            raise ValueError("Full name must be between 2 and 100 characters.")
+        for ch in v_clean:
+            cat = unicodedata.category(ch)
+            if not (cat.startswith("L") or cat.startswith("M") or ch in (" ", ".", "'", "-")):
+                raise ValueError("Full name can only contain letters, spaces, hyphens, periods, and apostrophes.")
+        return v_clean
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v):
+        if not (8 <= len(v) <= 72):
+            raise ValueError("Password must be between 8 and 72 characters.")
+        if not any(ch.isalpha() for ch in v):
+            raise ValueError("Password must contain at least one letter.")
+        if not any(ch.isdigit() for ch in v):
+            raise ValueError("Password must contain at least one number.")
+        if v.lower() in COMMON_PASSWORDS:
+            raise ValueError("Password is too common. Please choose a more secure password.")
+        return v
 
     @field_validator("guardian_name")
     @classmethod
@@ -94,6 +125,11 @@ class UserCreate(BaseModel):
                 )
             if has_email and self.guardian_report_enabled is None:
                 self.guardian_report_enabled = True
+
+        if self.email and "@" in str(self.email) and self.password:
+            email_local = str(self.email).split("@")[0].lower()
+            if len(email_local) >= 3 and email_local in str(self.password).lower():
+                raise ValueError("Password must not contain your email username.")
         return self
 
 class UserLogin(BaseModel):
