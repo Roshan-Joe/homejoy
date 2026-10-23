@@ -37,6 +37,7 @@ def serialize_elderly_doc(doc: Dict[str, Any], user_doc: Optional[Dict[str, Any]
         "date_of_birth": doc.get("date_of_birth") or doc.get("dob") or "1952-05-14",
         "gender": doc.get("gender", "Female"),
         "blood_group": doc.get("blood_group", "O+"),
+        "district": doc.get("district", ""),
         "address": doc.get("address") or user_info.get("address") or "",
         "emergency_contact_name": doc.get("emergency_contact_name", ""),
         "emergency_contact_phone": doc.get("emergency_contact_phone", ""),

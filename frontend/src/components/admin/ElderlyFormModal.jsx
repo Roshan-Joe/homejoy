@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, HeartPulse, UserCheck, ShieldCheck, Mail, Phone, AlertCircle, Check } from 'lucide-react';
+import { X, HeartPulse, UserCheck, ShieldCheck, Mail, Phone, AlertCircle, Check, MapPin } from 'lucide-react';
+import { KERALA_DISTRICTS } from '../../constants/districts';
 
 const RELATIONSHIP_OPTIONS = [
   'Son',
@@ -24,6 +25,7 @@ export const ElderlyFormModal = ({ isOpen, onClose, onSubmit, elderly = null, lo
     date_of_birth: '1954-04-12',
     gender: 'Female',
     blood_group: 'O+',
+    district: '',
     address: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
@@ -52,6 +54,7 @@ export const ElderlyFormModal = ({ isOpen, onClose, onSubmit, elderly = null, lo
         date_of_birth: elderly.date_of_birth || '1954-04-12',
         gender: elderly.gender || 'Female',
         blood_group: elderly.blood_group || 'O+',
+        district: elderly.district || '',
         address: elderly.address || '',
         emergency_contact_name: elderly.emergency_contact_name || '',
         emergency_contact_phone: elderly.emergency_contact_phone || '',
@@ -77,6 +80,7 @@ export const ElderlyFormModal = ({ isOpen, onClose, onSubmit, elderly = null, lo
         date_of_birth: '1954-04-12',
         gender: 'Female',
         blood_group: 'O+',
+        district: '',
         address: '',
         emergency_contact_name: '',
         emergency_contact_phone: '',
@@ -110,6 +114,10 @@ export const ElderlyFormModal = ({ isOpen, onClose, onSubmit, elderly = null, lo
   };
 
   const validateForm = () => {
+    if (!formData.district) {
+      return 'Please select a valid operating district for the resident.';
+    }
+
     // If not edit mode (i.e. new registration), enforce guardian requirement
     if (!isEdit) {
       const gEmail = formData.guardian_email ? formData.guardian_email.trim() : '';
@@ -309,15 +317,38 @@ export const ElderlyFormModal = ({ isOpen, onClose, onSubmit, elderly = null, lo
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Home Address</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="e.g. 124 Blossom Lane, Apt 4B"
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <MapPin size={14} color="var(--primary)" />
+                <span>District *</span>
+              </label>
+              <select
+                className="form-select"
+                value={formData.district}
+                onChange={(e) => {
+                  setFormData({ ...formData, district: e.target.value });
+                  setValidationError('');
+                }}
+                required
+              >
+                <option value="">-- Select Kerala District --</option>
+                {KERALA_DISTRICTS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Home Address</label>
+              <input
+                type="text"
+                className="form-input"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="e.g. 124 Blossom Lane, Apt 4B"
+              />
+            </div>
           </div>
 
           {/* Emergency Contact Section */}

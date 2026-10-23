@@ -172,6 +172,7 @@ class ElderlyService:
             "date_of_birth": payload.date_of_birth or "1954-04-12",
             "gender": payload.gender,
             "blood_group": payload.blood_group,
+            "district": payload.district,
             "address": payload.address or "",
             "emergency_contact_name": payload.emergency_contact_name or "",
             "emergency_contact_phone": payload.emergency_contact_phone or "",
@@ -233,6 +234,9 @@ class ElderlyService:
 
         if payload.blood_group is not None:
             updates["blood_group"] = payload.blood_group
+
+        if payload.district is not None:
+            updates["district"] = payload.district
 
         if payload.address is not None:
             updates["address"] = payload.address

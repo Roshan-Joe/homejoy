@@ -132,6 +132,7 @@ def _serialize_profile(doc: Dict[str, Any], user: Dict[str, Any]) -> Dict[str, A
         "date_of_birth": dob,
         "age": _compute_age(dob),
         "gender": doc.get("gender", ""),
+        "district": doc.get("district", ""),
         "address": doc.get("address") or user.get("address", ""),
         "blood_group": doc.get("blood_group", ""),
         "guardian_name": doc.get("guardian_name", ""),
@@ -375,6 +376,8 @@ class ElderlyClientService:
             updates["date_of_birth"] = payload.date_of_birth
         if payload.gender is not None:
             updates["gender"] = payload.gender
+        if payload.district is not None:
+            updates["district"] = payload.district
         if payload.address is not None:
             updates["address"] = payload.address.strip()
         if payload.guardian_name is not None:

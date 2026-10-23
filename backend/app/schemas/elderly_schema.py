@@ -1,30 +1,37 @@
 import re
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from typing import Optional, List, Dict, Any
+from app.constants import KERALA_DISTRICTS, validate_district
 
 class WellnessCheckinSchema(BaseModel):
-    date: str = Field(..., example="2026-08-03")
-    mood: str = Field(default="Good", example="Good")
-    blood_pressure: Optional[str] = Field(default="120/80", example="120/80")
-    heart_rate: Optional[int] = Field(default=72, example=72)
-    sleep_hours: Optional[float] = Field(default=7.5, example=7.5)
-    notes: Optional[str] = Field(default="", example="Patient reports feeling energetic.")
+    date: str = Field(..., json_schema_extra={"example": "2026-08-03"})
+    mood: str = Field(default="Good", json_schema_extra={"example": "Good"})
+    blood_pressure: Optional[str] = Field(default="120/80", json_schema_extra={"example": "120/80"})
+    heart_rate: Optional[int] = Field(default=72, json_schema_extra={"example": 72})
+    sleep_hours: Optional[float] = Field(default=7.5, json_schema_extra={"example": 7.5})
+    notes: Optional[str] = Field(default="", json_schema_extra={"example": "Patient reports feeling energetic."})
 
 class ElderlyCreateSchema(BaseModel):
-    name: str = Field(..., min_length=2, max_length=100, example="Eleanor Vance")
-    email: EmailStr = Field(..., example="eleanor@homejoy.com")
-    phone: Optional[str] = Field(default="", example="+1 (555) 234-5678")
+    name: str = Field(..., min_length=2, max_length=100, json_schema_extra={"example": "Eleanor Vance"})
+    email: EmailStr = Field(..., json_schema_extra={"example": "eleanor@homejoy.com"})
+    phone: Optional[str] = Field(default="", json_schema_extra={"example": "+1 (555) 234-5678"})
     password: Optional[str] = Field(default="password123", min_length=6)
     age: int = Field(default=72, ge=50, le=120)
     date_of_birth: Optional[str] = Field(default="1954-04-12")
-    gender: str = Field(default="Female", example="Female")
-    blood_group: str = Field(default="O+", example="O+")
+    gender: str = Field(default="Female", json_schema_extra={"example": "Female"})
+    blood_group: str = Field(default="O+", json_schema_extra={"example": "O+"})
+    district: str = Field(..., json_schema_extra={"example": "Ernakulam"})
     address: Optional[str] = Field(default="")
     emergency_contact_name: Optional[str] = Field(default="Robert Vance")
     emergency_contact_phone: Optional[str] = Field(default="+1 (555) 987-6543")
     medical_conditions: Optional[List[str]] = Field(default=["Hypertension"])
     allergies: Optional[List[str]] = Field(default=["Penicillin"])
     medications: Optional[List[str]] = Field(default=["Lisinopril 10mg"])
+
+    @field_validator("district")
+    @classmethod
+    def check_district(cls, v):
+        return validate_district(v, required=True)
 
     # Guardian / Family Contact Fields
     guardian_name: Optional[str] = Field(default=None, example="David Vance")
@@ -117,12 +124,20 @@ class ElderlyUpdateSchema(BaseModel):
     date_of_birth: Optional[str] = None
     gender: Optional[str] = None
     blood_group: Optional[str] = None
+    district: Optional[str] = None
     address: Optional[str] = None
     emergency_contact_name: Optional[str] = None
     emergency_contact_phone: Optional[str] = None
     medical_conditions: Optional[List[str]] = None
     allergies: Optional[List[str]] = None
     medications: Optional[List[str]] = None
+
+    @field_validator("district")
+    @classmethod
+    def check_update_district(cls, v):
+        if v is not None:
+            return validate_district(v, required=False)
+        return v
 
     # Guardian / Family Contact Fields (All Optional on Update)
     guardian_name: Optional[str] = None
@@ -202,6 +217,7 @@ class ElderlyResponseSchema(BaseModel):
     date_of_birth: str
     gender: str
     blood_group: str
+    district: Optional[str] = ""
     address: Optional[str] = ""
     emergency_contact_name: Optional[str] = ""
     emergency_contact_phone: Optional[str] = ""

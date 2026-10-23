@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, EmailStr, field_validator, model_validato
 from typing import Optional, List, Dict, Any
 import re
 from datetime import date, datetime
+from app.constants import validate_district
 
 
 # ---------------------------------------------------------------------------
@@ -20,6 +21,7 @@ class ElderlyProfileSelfUpdate(BaseModel):
     phone: Optional[str] = None
     date_of_birth: Optional[str] = None  # ISO date string YYYY-MM-DD
     gender: Optional[str] = None
+    district: Optional[str] = None
     address: Optional[str] = None
     guardian_name: Optional[str] = None
     guardian_relationship: Optional[str] = None
@@ -27,6 +29,13 @@ class ElderlyProfileSelfUpdate(BaseModel):
     guardian_email: Optional[EmailStr] = None
     guardian_report_consent: Optional[bool] = None
     guardian_report_enabled: Optional[bool] = None
+
+    @field_validator("district")
+    @classmethod
+    def check_self_district(cls, v):
+        if v is not None:
+            return validate_district(v, required=False)
+        return v
 
     @field_validator("date_of_birth")
     @classmethod
@@ -62,6 +71,7 @@ class ElderlyProfileResponse(BaseModel):
     date_of_birth: Optional[str] = None
     age: Optional[int] = None   # computed server-side from DOB — never user-entered
     gender: Optional[str] = ""
+    district: Optional[str] = ""
     address: Optional[str] = ""
     blood_group: Optional[str] = ""
     guardian_name: Optional[str] = ""

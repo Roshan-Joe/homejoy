@@ -55,9 +55,10 @@ export const CaregiverTable = ({
         <thead>
           <tr>
             <th>Caregiver</th>
+            <th>District</th>
             <th>Qualification & Exp</th>
             <th>Shift Schedule</th>
-            <th>Assigned Residents</th>
+            <th>Workload Capacity</th>
             <th>Performance Rating</th>
             <th style={{ textAlign: 'right' }}>Actions</th>
           </tr>
@@ -66,6 +67,8 @@ export const CaregiverTable = ({
           {caregivers.map((c) => {
             const displayName = c.name || c.full_name || 'Caregiver';
             const assignedCount = c.assigned_elderly_ids ? c.assigned_elderly_ids.length : 0;
+            const maxPatients = c.max_patients || 8;
+            const isFull = assignedCount >= maxPatients;
 
             return (
               <tr key={c.id}>
@@ -102,6 +105,18 @@ export const CaregiverTable = ({
                 </td>
 
                 <td>
+                  {c.district ? (
+                    <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.875rem' }}>
+                      {c.district}
+                    </span>
+                  ) : (
+                    <span className="badge badge-alert-new" style={{ fontSize: '0.74rem' }}>
+                      District missing
+                    </span>
+                  )}
+                </td>
+
+                <td>
                   <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{c.qualification}</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{c.experience_years} Years Experience</div>
                 </td>
@@ -111,14 +126,22 @@ export const CaregiverTable = ({
                 </td>
 
                 <td>
-                  <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => onAssignElderly(c)}
-                    style={{ padding: '4px 10px', fontSize: '0.8rem' }}
-                  >
-                    <Users size={14} />
-                    <span>{assignedCount} Resident{assignedCount !== 1 ? 's' : ''}</span>
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => onAssignElderly(c)}
+                      style={{ padding: '4px 10px', fontSize: '0.8rem' }}
+                      title={`Manage assigned clients (${assignedCount}/${maxPatients})`}
+                    >
+                      <Users size={14} />
+                      <span style={{ fontWeight: 700 }}>{assignedCount}/{maxPatients}</span>
+                    </button>
+                    {isFull && (
+                      <span className="badge badge-alert-new" style={{ fontSize: '0.72rem', padding: '2px 6px' }}>
+                        At Capacity
+                      </span>
+                    )}
+                  </div>
                 </td>
 
                 <td>

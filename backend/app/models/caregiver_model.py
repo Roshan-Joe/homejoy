@@ -31,6 +31,8 @@ def serialize_caregiver_doc(doc: Dict[str, Any], user_doc: Optional[Dict[str, An
         "experience_years": doc.get("experience_years", 4),
         "shift": doc.get("shift", "Day"),
         "status": doc.get("status", "Active"),
+        "district": doc.get("district", ""),
+        "max_patients": int(doc.get("max_patients", 8)),
         "assigned_elderly_ids": [str(eid) for eid in assigned_elderly_ids],
         "assigned_elderly_names": assigned_elderly_names,
         "daily_reports_submitted": doc.get("daily_reports_submitted", 0),

@@ -65,6 +65,7 @@ export const ElderlyTable = ({
         <thead>
           <tr style={{ borderBottom: '2px solid #e2e8f0', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
             <th style={{ padding: '12px 14px' }}>Patient</th>
+            <th style={{ padding: '12px 14px' }}>District</th>
             <th style={{ padding: '12px 14px' }}>Age & Blood</th>
             <th style={{ padding: '12px 14px' }}>AI Risk Score</th>
             <th style={{ padding: '12px 14px' }}>Assigned Caregiver</th>
@@ -75,6 +76,7 @@ export const ElderlyTable = ({
         <tbody>
           {elderly.map((p) => {
             const displayName = p.name || p.full_name || 'Elderly Patient';
+            const isUnassigned = !p.assigned_caregiver_id || p.assigned_caregiver_name === 'Not Assigned';
 
             return (
               <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', fontSize: '0.9rem' }}>
@@ -110,6 +112,18 @@ export const ElderlyTable = ({
                 </td>
 
                 <td style={{ padding: '14px' }}>
+                  {p.district ? (
+                    <span style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.88rem' }}>
+                      {p.district}
+                    </span>
+                  ) : (
+                    <span className="badge badge-alert-new" style={{ fontSize: '0.74rem' }}>
+                      District missing
+                    </span>
+                  )}
+                </td>
+
+                <td style={{ padding: '14px' }}>
                   <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{p.age} yrs ({p.gender || 'F'})</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Blood: <strong>{p.blood_group || 'O+'}</strong></div>
                 </td>
@@ -119,9 +133,15 @@ export const ElderlyTable = ({
                 </td>
 
                 <td style={{ padding: '14px' }}>
-                  <div style={{ fontSize: '0.88rem', fontWeight: p.assigned_caregiver_name !== 'Not Assigned' ? 600 : 400, color: p.assigned_caregiver_name !== 'Not Assigned' ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                    {p.assigned_caregiver_name}
-                  </div>
+                  {isUnassigned ? (
+                    <span className="badge badge-alert-new" style={{ fontSize: '0.78rem' }}>
+                      Unassigned
+                    </span>
+                  ) : (
+                    <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                      {p.assigned_caregiver_name}
+                    </div>
+                  )}
                 </td>
 
                 <td style={{ padding: '14px' }}>

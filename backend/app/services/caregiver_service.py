@@ -158,6 +158,8 @@ class CaregiverService:
             "experience_years": payload.experience_years,
             "shift": payload.shift,
             "status": payload.status,
+            "district": payload.district,
+            "max_patients": int(payload.max_patients) if payload.max_patients is not None else 8,
             "assigned_elderly_ids": [],
             "assigned_elderly_names": [],
             "daily_reports_submitted": 0,
@@ -204,6 +206,18 @@ class CaregiverService:
 
         if payload.status is not None:
             updates["status"] = payload.status
+
+        if payload.district is not None:
+            updates["district"] = payload.district
+
+        if payload.max_patients is not None:
+            current_assigned = len(existing.get("assigned_elderly_ids", []))
+            if payload.max_patients < current_assigned:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot reduce max capacity to {payload.max_patients}. Caregiver currently has {current_assigned} assigned clients."
+                )
+            updates["max_patients"] = int(payload.max_patients)
 
         updates["updatedAt"] = now_iso
 
