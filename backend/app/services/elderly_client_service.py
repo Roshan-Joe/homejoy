@@ -933,10 +933,10 @@ class ElderlyClientService:
 
         # Alert trigger: If risk is Moderate or High, notify caregiver or notify Admin if unassigned
         if wellness_risk in ["Moderate", "High"]:
-            eld_name = profile.get("full_name") or profile.get("name", "Resident")
-            assigned_cg = profile.get("assigned_caregiver_id")
-            if assigned_cg and str(assigned_cg) != "Not Assigned":
-                try:
+            try:
+                eld_name = profile.get("full_name") or profile.get("name", "Resident")
+                assigned_cg = profile.get("assigned_caregiver_id")
+                if assigned_cg and str(assigned_cg) != "Not Assigned":
                     from app.database import alerts_collection
                     alert_doc = {
                         "alert_type": f"{wellness_risk} Wellness Risk",
@@ -950,10 +950,7 @@ class ElderlyClientService:
                         "created_at": now_iso
                     }
                     alerts_collection.insert_one(alert_doc)
-                except Exception:
-                    pass
-            elif wellness_risk == "High":
-                try:
+                elif wellness_risk == "High":
                     notifications_collection.insert_one({
                         "target_role": "Admin",
                         "title": f"🚨 High-Risk Telemetry on Unassigned Resident: {eld_name}",
@@ -965,8 +962,6 @@ class ElderlyClientService:
                         "created_at": now_iso,
                         "created_by": "Telemetry Engine"
                     })
-                except Exception:
-                    pass
             except Exception as e:
                 print("[WARN] Alert creation note:", e)
 
