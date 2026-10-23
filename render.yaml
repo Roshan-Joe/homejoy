@@ -1,0 +1,46 @@
+services:
+  # ── HomeJoy Backend FastAPI Web Service ────────────────────────────────────
+  - type: web
+    name: homejoy-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    plan: free
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DATABASE_NAME
+        value: homejoy
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 60
+      - key: EMAIL_MODE
+        value: console
+      - key: AUTO_SEND_DAILY_REPORTS
+        value: "false"
+      # Fill these in Render Dashboard:
+      - key: MONGODB_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+
+  # ── HomeJoy Frontend React Vite Static Site ───────────────────────────────
+  - type: static_site
+    name: homejoy-app
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    plan: free
+    routes:
+      # Single Page App (SPA) rewrite rule to handle React Router routes
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
