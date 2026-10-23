@@ -16,17 +16,23 @@ def get_all_caregivers(
     search: Optional[str] = Query(None, description="Search by name, email, or qualification"),
     shift: Optional[str] = Query(None, description="Filter by shift (Day, Night, Rotational)"),
     status: Optional[str] = Query(None, description="Filter by status (Active, Inactive, On Leave)"),
+    district: Optional[str] = Query(None, description="Filter by district"),
+    sort_by: Optional[str] = Query("created_at", description="Field to sort by"),
+    sort_order: Optional[str] = Query("desc", description="Sort direction (asc or desc)"),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     admin_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Get all caregiver profiles with search, shift filter, status filter, and pagination.
+    Get all caregiver profiles with search, shift filter, status filter, district filter, and pagination.
     """
     return CaregiverService.get_all_caregivers(
         search=search,
         shift=shift,
         status_filter=status,
+        district=district,
+        sort_by=sort_by,
+        sort_order=sort_order,
         page=page,
         limit=limit
     )

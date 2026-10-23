@@ -931,23 +931,42 @@ class ElderlyClientService:
             }}
         )
 
-        # Alert trigger: If risk is Moderate or High and caregiver assigned, notify caregiver
-        if wellness_risk in ["Moderate", "High"] and profile.get("assigned_caregiver_id"):
-            try:
-                from app.database import alerts_collection
-                eld_name = profile.get("full_name") or profile.get("name", "Resident")
-                alert_doc = {
-                    "alert_type": f"{wellness_risk} Wellness Risk",
-                    "severity": "High" if wellness_risk == "High" else "Medium",
-                    "title": f"⚠️ {wellness_risk.upper()} TELEMETRY ALERT: {eld_name}",
-                    "reason": f"Self-reported indicators triggered {wellness_risk} risk: {'; '.join(risk_result['contributing_factors'][:2])}",
-                    "elderly_id": str(profile["_id"]),
-                    "elderly_name": eld_name,
-                    "caregiver_id": str(profile["assigned_caregiver_id"]),
-                    "status": "Pending",
-                    "created_at": now_iso
-                }
-                alerts_collection.insert_one(alert_doc)
+        # Alert trigger: If risk is Moderate or High, notify caregiver or notify Admin if unassigned
+        if wellness_risk in ["Moderate", "High"]:
+            eld_name = profile.get("full_name") or profile.get("name", "Resident")
+            assigned_cg = profile.get("assigned_caregiver_id")
+            if assigned_cg and str(assigned_cg) != "Not Assigned":
+                try:
+                    from app.database import alerts_collection
+                    alert_doc = {
+                        "alert_type": f"{wellness_risk} Wellness Risk",
+                        "severity": "High" if wellness_risk == "High" else "Medium",
+                        "title": f"⚠️ {wellness_risk.upper()} TELEMETRY ALERT: {eld_name}",
+                        "reason": f"Self-reported indicators triggered {wellness_risk} risk: {'; '.join(risk_result['contributing_factors'][:2])}",
+                        "elderly_id": str(profile["_id"]),
+                        "elderly_name": eld_name,
+                        "caregiver_id": str(assigned_cg),
+                        "status": "Pending",
+                        "created_at": now_iso
+                    }
+                    alerts_collection.insert_one(alert_doc)
+                except Exception:
+                    pass
+            elif wellness_risk == "High":
+                try:
+                    notifications_collection.insert_one({
+                        "target_role": "Admin",
+                        "title": f"🚨 High-Risk Telemetry on Unassigned Resident: {eld_name}",
+                        "message": f"Resident {eld_name} logged High-Risk telemetry ({'; '.join(risk_result['contributing_factors'][:2])}) and currently has NO assigned caregiver.",
+                        "type": "emergency",
+                        "status": "unread",
+                        "client_id": str(profile["_id"]),
+                        "client_name": eld_name,
+                        "created_at": now_iso,
+                        "created_by": "Telemetry Engine"
+                    })
+                except Exception:
+                    pass
             except Exception as e:
                 print("[WARN] Alert creation note:", e)
 

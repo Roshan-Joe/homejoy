@@ -22,6 +22,9 @@ class ElderlyService:
         caregiver_id: Optional[str] = None,
         doctor_id: Optional[str] = None,
         risk_level: Optional[str] = None,
+        district: Optional[str] = None,
+        sort_by: Optional[str] = "created_at",
+        sort_order: Optional[str] = "desc",
         page: int = 1,
         limit: int = 10
     ) -> Dict[str, Any]:
@@ -39,7 +42,14 @@ class ElderlyService:
                 {"phone": {"$regex": s, "$options": "i"}}
             ]
 
-        if caregiver_id and caregiver_id != "all":
+        if caregiver_id and caregiver_id.lower() == "unassigned":
+            query["$or"] = [
+                {"assigned_caregiver_id": None},
+                {"assigned_caregiver_id": {"$exists": False}},
+                {"assigned_caregiver_id": "Not Assigned"},
+                {"assigned_caregiver_id": ""}
+            ]
+        elif caregiver_id and caregiver_id != "all":
             query["assigned_caregiver_id"] = caregiver_id
 
         if doctor_id and doctor_id != "all":
@@ -47,6 +57,9 @@ class ElderlyService:
 
         if risk_level and risk_level != "all":
             query["risk_level"] = {"$regex": f"^{risk_level.strip()}$", "$options": "i"}
+
+        if district and district != "all":
+            query["district"] = {"$regex": f"^{district.strip()}$", "$options": "i"}
 
         total = elderly_collection.count_documents(query)
 
@@ -61,6 +74,7 @@ class ElderlyService:
                     "email": u.get("email", ""),
                     "phone": u.get("phone", ""),
                     "age": 72,
+                    "district": "Other",
                     "date_of_birth": "1954-04-12",
                     "gender": "Female",
                     "blood_group": "O+",
@@ -87,7 +101,20 @@ class ElderlyService:
         total_pages = math.ceil(total / limit) if limit > 0 else 1
         skip = (max(page, 1) - 1) * limit
 
-        cursor = elderly_collection.find(query).sort("createdAt", -1).skip(skip).limit(limit)
+        sort_field = "createdAt"
+        if sort_by:
+            s_lower = sort_by.lower()
+            if "name" in s_lower:
+                sort_field = "name"
+            elif "age" in s_lower:
+                sort_field = "age"
+            elif "risk" in s_lower:
+                sort_field = "risk_level"
+            elif "district" in s_lower:
+                sort_field = "district"
+
+        direction = -1 if (sort_order or "desc").lower() == "desc" else 1
+        cursor = elderly_collection.find(query).sort(sort_field, direction).skip(skip).limit(limit)
 
         elderly_list = []
         for doc in cursor:

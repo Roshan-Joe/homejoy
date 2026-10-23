@@ -112,6 +112,8 @@ class UserOut(BaseModel):
     role: str
     is_active: bool = True
     created_at: Optional[str] = None
+    last_login: Optional[str] = None
+    created_by: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
 
@@ -131,6 +133,22 @@ class AdminUserUpdate(BaseModel):
 class UserStatusUpdate(BaseModel):
     is_active: bool
 
+class BulkUserStatusUpdate(BaseModel):
+    user_ids: List[str]
+    is_active: bool
+
+class BulkAssignElderly(BaseModel):
+    elderly_ids: List[str]
+    caregiver_id: str
+    note: Optional[str] = ""
+
+class AssignCaregiverAction(BaseModel):
+    caregiver_id: str
+    note: Optional[str] = ""
+
+class UnassignCaregiverAction(BaseModel):
+    note: Optional[str] = ""
+
 class DashboardStats(BaseModel):
     total_users: int
     total_elderly: int
@@ -138,12 +156,19 @@ class DashboardStats(BaseModel):
     active_users: int
     new_registrations: int
     recent_users: List[UserOut]
+    unassigned_clients_count: int = 0
+    unassigned_overdue_count: int = 0
+    caregivers_at_capacity_count: int = 0
+    high_risk_today_count: int = 0
+    open_help_requests_count: int = 0
 
 class NotificationCreate(BaseModel):
     title: str = Field(..., min_length=2, max_length=150)
     message: str = Field(..., min_length=2)
     type: str = Field(default="announcement") # announcement, emergency, system
     target_role: str = Field(default="all") # all, Elderly, Caregiver, Doctor
+    client_id: Optional[str] = None
+    client_name: Optional[str] = None
 
 class NotificationOut(BaseModel):
     id: str
@@ -153,11 +178,17 @@ class NotificationOut(BaseModel):
     target_role: str
     created_at: str
     created_by: str
+    client_id: Optional[str] = None
+    client_name: Optional[str] = None
+    is_read: bool = False
 
 class AnalyticsData(BaseModel):
     registration_trend: List[Dict[str, Any]]
     role_distribution: List[Dict[str, Any]]
     active_status: Dict[str, int]
+    risk_distribution: List[Dict[str, Any]] = []
+    checkin_completion_rate: Dict[str, Any] = {}
+    alert_response_time: Dict[str, Any] = {}
 
 class DatabaseStatusOut(BaseModel):
     status: str

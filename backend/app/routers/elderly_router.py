@@ -14,21 +14,27 @@ router = APIRouter(prefix="/api/elderly", tags=["Elderly Management"])
 @router.get("", response_model=ElderlyPaginatedResponseSchema)
 def get_all_elderly(
     search: Optional[str] = Query(None, description="Search by name, email, or phone"),
-    caregiver_id: Optional[str] = Query(None, description="Filter by assigned caregiver ID"),
+    caregiver_id: Optional[str] = Query(None, description="Filter by assigned caregiver ID or 'unassigned'"),
     doctor_id: Optional[str] = Query(None, description="Filter by assigned doctor ID"),
     risk_level: Optional[str] = Query(None, description="Filter by AI risk level (High, Medium, Low)"),
+    district: Optional[str] = Query(None, description="Filter by district"),
+    sort_by: Optional[str] = Query("created_at", description="Field to sort by"),
+    sort_order: Optional[str] = Query("desc", description="Sort direction (asc or desc)"),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     admin_user: dict = Depends(get_current_admin_user)
 ):
     """
-    Get all elderly patient profiles with search, caregiver/doctor filter, risk filter, and pagination.
+    Get all elderly patient profiles with search, caregiver/doctor filter, risk filter, district filter, and pagination.
     """
     return ElderlyService.get_all_elderly(
         search=search,
         caregiver_id=caregiver_id,
         doctor_id=doctor_id,
         risk_level=risk_level,
+        district=district,
+        sort_by=sort_by,
+        sort_order=sort_order,
         page=page,
         limit=limit
     )

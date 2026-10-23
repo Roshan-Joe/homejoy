@@ -31,6 +31,7 @@ class HelpRequestService:
         cg_id = elderly_doc.get("assigned_caregiver_id")
         cg_name = elderly_doc.get("assigned_caregiver_name", "Assigned Caregiver")
 
+        is_unassigned = False
         if not cg_id or cg_name == "Not Assigned":
             # Fallback: check if any caregiver has this elderly in assigned_elderly_ids
             cg_doc = caregivers_collection.find_one({
@@ -43,10 +44,21 @@ class HelpRequestService:
                 cg_id = str(cg_doc["_id"])
                 cg_name = cg_doc.get("name", "Assigned Caregiver")
             else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="No caregiver is currently assigned to your account. Please contact your care team or system admin."
-                )
+                is_unassigned = True
+                cg_id = "admin"
+                cg_name = "Admin Unassigned Queue"
+                # Dispatch alert to Admin notifications
+                notifications_collection.insert_one({
+                    "target_role": "Admin",
+                    "title": f"🚨 Urgent Help Request from Unassigned Resident: {elderly_name}",
+                    "message": f"Unassigned resident {elderly_name} requested assistance: '{payload.reason}'. Immediate caregiver allocation required.",
+                    "type": "emergency",
+                    "status": "unread",
+                    "client_id": elderly_id,
+                    "client_name": elderly_name,
+                    "created_at": now_iso,
+                    "created_by": "System"
+                })
 
         request_doc = {
             "user_id": user_id,

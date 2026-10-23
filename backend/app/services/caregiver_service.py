@@ -21,6 +21,9 @@ class CaregiverService:
         search: Optional[str] = None,
         shift: Optional[str] = None,
         status_filter: Optional[str] = None,
+        district: Optional[str] = None,
+        sort_by: Optional[str] = "created_at",
+        sort_order: Optional[str] = "desc",
         page: int = 1,
         limit: int = 10
     ) -> Dict[str, Any]:
@@ -45,6 +48,9 @@ class CaregiverService:
         if status_filter and status_filter != "all":
             query["status"] = {"$regex": f"^{status_filter.strip()}$", "$options": "i"}
 
+        if district and district != "all":
+            query["district"] = {"$regex": f"^{district.strip()}$", "$options": "i"}
+
         total = caregivers_collection.count_documents(query)
 
         # Fallback: if no documents in caregivers_collection, auto-seed from users where role="Caregiver"
@@ -57,6 +63,8 @@ class CaregiverService:
                     "name": u.get("full_name") or u.get("name", "Caregiver Staff"),
                     "email": u.get("email", ""),
                     "phone": u.get("phone", ""),
+                    "district": "Other",
+                    "max_patients": 8,
                     "qualification": "Certified Nursing Assistant (CNA)",
                     "experience_years": 4,
                     "shift": "Day",
@@ -74,7 +82,20 @@ class CaregiverService:
         total_pages = math.ceil(total / limit) if limit > 0 else 1
         skip = (max(page, 1) - 1) * limit
 
-        cursor = caregivers_collection.find(query).sort("createdAt", -1).skip(skip).limit(limit)
+        sort_field = "createdAt"
+        if sort_by:
+            s_lower = sort_by.lower()
+            if "name" in s_lower:
+                sort_field = "name"
+            elif "district" in s_lower:
+                sort_field = "district"
+            elif "shift" in s_lower:
+                sort_field = "shift"
+            elif "status" in s_lower:
+                sort_field = "status"
+
+        direction = -1 if (sort_order or "desc").lower() == "desc" else 1
+        cursor = caregivers_collection.find(query).sort(sort_field, direction).skip(skip).limit(limit)
 
         caregiver_list = []
         for doc in cursor:
