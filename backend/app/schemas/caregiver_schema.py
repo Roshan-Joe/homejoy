@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Dict, Any
-from app.constants import KERALA_DISTRICTS, validate_district
+from app.constants import KERALA_DISTRICTS, DEFAULT_DISTRICT, validate_district
 
 class DailyReportCreateSchema(BaseModel):
     elderly_id: str = Field(..., json_schema_extra={"example": "60d5ec49f1b2c80015f8e123"})
@@ -21,13 +21,13 @@ class CaregiverCreateSchema(BaseModel):
     experience_years: int = Field(default=5, ge=0, le=40)
     shift: str = Field(default="Day", json_schema_extra={"example": "Day"}) # Day, Night, Rotational
     status: str = Field(default="Active", json_schema_extra={"example": "Active"})
-    district: str = Field(..., json_schema_extra={"example": "Ernakulam"})
+    district: str = Field(default=DEFAULT_DISTRICT, json_schema_extra={"example": "Ernakulam"})
     max_patients: int = Field(default=8, ge=1, le=20, json_schema_extra={"example": 8})
 
     @field_validator("district")
     @classmethod
     def check_district(cls, v):
-        return validate_district(v, required=True)
+        return validate_district(v, required=False) or DEFAULT_DISTRICT
 
 class CaregiverUpdateSchema(BaseModel):
     name: Optional[str] = None
