@@ -11,8 +11,10 @@ import DoctorAppointmentsModal from '../../components/admin/DoctorAppointmentsMo
 import DeleteConfirmationModal from '../../components/admin/DeleteConfirmationModal';
 
 import { Stethoscope, RefreshCw, UserPlus, Filter, AlertTriangle } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
 
 export const DoctorManagement = () => {
+  const { toast } = useToast();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -69,9 +71,11 @@ export const DoctorManagement = () => {
       setActionLoading(true);
       await doctorService.createDoctor(payload);
       setIsAddModalOpen(false);
+      toast.success('Physician profile created.');
       fetchDoctors();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to create doctor profile.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to create doctor profile.');
     } finally {
       setActionLoading(false);
     }
@@ -82,9 +86,11 @@ export const DoctorManagement = () => {
       setActionLoading(true);
       await doctorService.updateDoctor(editDoctor.id, payload);
       setEditDoctor(null);
+      toast.success('Physician profile updated.');
       fetchDoctors();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to update doctor profile.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to update doctor profile.');
     } finally {
       setActionLoading(false);
     }
@@ -93,29 +99,36 @@ export const DoctorManagement = () => {
   const handleAssignPatient = async (doctorId, elderlyId) => {
     try {
       await doctorService.assignPatient(doctorId, elderlyId);
+      toast.success('Patient assigned to physician.');
       fetchDoctors();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to assign elderly patient.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to assign elderly patient.');
     }
   };
 
   const handleRemovePatient = async (doctorId, elderlyId) => {
     try {
       await doctorService.removePatientAssignment(doctorId, elderlyId);
+      toast.info('Patient removed from physician assignment.');
       fetchDoctors();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to remove patient assignment.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to remove patient assignment.');
     }
   };
 
   const handleDeleteConfirm = async () => {
+    if (!deleteDoctor) return;
     try {
       setActionLoading(true);
       await doctorService.deleteDoctor(deleteDoctor.id);
+      toast.success(`Doctor ${deleteDoctor.name || deleteDoctor.full_name || 'profile'} deleted.`);
       setDeleteDoctor(null);
       fetchDoctors();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to delete doctor profile.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to delete doctor profile.');
     } finally {
       setActionLoading(false);
     }

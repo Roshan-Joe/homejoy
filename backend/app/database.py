@@ -56,8 +56,12 @@ def init_db_indexes():
         # Profiles
         elderly_collection.create_index("user_id")
         elderly_collection.create_index("assigned_caregiver_id")
+        elderly_collection.create_index("district")
+        elderly_collection.create_index("risk_level")
         caregivers_collection.create_index("user_id")
         caregivers_collection.create_index("assigned_elderly_ids")
+        caregivers_collection.create_index("district")
+        caregivers_collection.create_index("status")
 
         # Telemetry & Check-ins
         wellness_checkins_collection.create_index([("user_id", 1), ("date", -1)])

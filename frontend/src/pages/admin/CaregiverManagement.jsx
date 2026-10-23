@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import api from '../../services/api';
 import caregiverService from '../../services/caregiverService';
+import { useToast } from '../../context/ToastContext';
+import { KERALA_DISTRICTS } from '../../constants/districts';
 
 import SearchBar from '../../components/admin/SearchBar';
 import Pagination from '../../components/admin/Pagination';
@@ -10,17 +14,27 @@ import DailyReportsModal from '../../components/admin/DailyReportsModal';
 import CaregiverPerformanceModal from '../../components/admin/CaregiverPerformanceModal';
 import DeleteConfirmationModal from '../../components/admin/DeleteConfirmationModal';
 
-import { UserCheck, RefreshCw, UserPlus, ShieldAlert, Filter, AlertTriangle } from 'lucide-react';
+import { RefreshCw, UserPlus, Download } from 'lucide-react';
 
 export const CaregiverManagement = () => {
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [caregivers, setCaregivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Search & Filter & Pagination State
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Search & Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [shiftFilter, setShiftFilter] = useState('all');
+  const [selectedShift, setSelectedShift] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState(searchParams.get('status') || 'all');
+  const [selectedDistrict, setSelectedDistrict] = useState(searchParams.get('district') || 'all');
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -33,13 +47,22 @@ export const CaregiverManagement = () => {
   const [viewPerfCaregiver, setViewPerfCaregiver] = useState(null);
   const [deleteCaregiver, setDeleteCaregiver] = useState(null);
 
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) setSelectedStatus(statusParam);
+  }, [searchParams]);
+
   const fetchCaregivers = async () => {
     try {
       setLoading(true);
       setError('');
       const data = await caregiverService.getCaregivers({
         search: searchTerm,
-        shift: shiftFilter,
+        shift: selectedShift,
+        status: selectedStatus,
+        district: selectedDistrict,
+        sort_by: sortBy,
+        sort_order: sortOrder,
         page,
         limit: 10
       });
@@ -47,9 +70,11 @@ export const CaregiverManagement = () => {
       setCaregivers(data.caregivers || []);
       setTotalPages(data.total_pages || 1);
       setTotalItems(data.total || 0);
+      setSelectedIds([]);
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Failed to fetch caregiver records from database.');
+      setError(err.response?.data?.detail || 'Failed to fetch caregiver records.');
+      toast.error('Failed to load caregiver records.');
     } finally {
       setLoading(false);
     }
@@ -57,34 +82,80 @@ export const CaregiverManagement = () => {
 
   useEffect(() => {
     fetchCaregivers();
-  }, [shiftFilter, page]);
+  }, [selectedShift, selectedStatus, selectedDistrict, sortBy, sortOrder, page]);
 
   const handleSearchSubmit = () => {
     setPage(1);
     fetchCaregivers();
   };
 
-  const handleCreateCaregiver = async (payload) => {
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const handleSelectCaregiver = (id, checked) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds(caregivers.map((c) => c.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      const res = await api.get('/api/admin/export/csv?type=caregivers', { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'homejoy_caregivers.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Caregiver records exported to CSV.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export caregiver CSV.');
+    }
+  };
+
+  const handleCreateCaregiver = async (formData) => {
     try {
       setActionLoading(true);
-      await caregiverService.createCaregiver(payload);
+      await caregiverService.createCaregiver(formData);
       setIsAddModalOpen(false);
+      toast.success('Caregiver profile created.');
       fetchCaregivers();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to create caregiver profile.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to create caregiver profile.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleUpdateCaregiver = async (payload) => {
+  const handleUpdateCaregiver = async (formData) => {
     try {
       setActionLoading(true);
-      await caregiverService.updateCaregiver(editCaregiver.id, payload);
+      await caregiverService.updateCaregiver(editCaregiver.id, formData);
       setEditCaregiver(null);
+      toast.success('Caregiver profile updated.');
       fetchCaregivers();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to update caregiver details.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to update caregiver profile.');
     } finally {
       setActionLoading(false);
     }
@@ -92,30 +163,45 @@ export const CaregiverManagement = () => {
 
   const handleAssignElderly = async (caregiverId, elderlyId) => {
     try {
+      setActionLoading(true);
       await caregiverService.assignElderly(caregiverId, elderlyId);
+      toast.success('Client assigned to caregiver.');
       fetchCaregivers();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to assign elderly resident.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to assign elderly resident.');
+      throw err;
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleRemoveElderly = async (caregiverId, elderlyId) => {
     try {
-      await caregiverService.removeElderlyAssignment(caregiverId, elderlyId);
+      setActionLoading(true);
+      await caregiverService.removeElderly(caregiverId, elderlyId);
+      toast.info('Client removed from caregiver roster.');
       fetchCaregivers();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to remove elderly assignment.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to remove elderly resident.');
+      throw err;
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteCaregiverConfirm = async () => {
+    if (!deleteCaregiver) return;
     try {
       setActionLoading(true);
       await caregiverService.deleteCaregiver(deleteCaregiver.id);
+      toast.success(`Caregiver ${deleteCaregiver.name || deleteCaregiver.full_name} deleted.`);
       setDeleteCaregiver(null);
       fetchCaregivers();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to delete caregiver.');
+      console.error(err);
+      toast.error(err.response?.data?.detail || 'Failed to delete caregiver.');
     } finally {
       setActionLoading(false);
     }
@@ -124,95 +210,144 @@ export const CaregiverManagement = () => {
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Top Header Card */}
-      <div className="glass-card" style={{ padding: '20px 24px' }}>
+      <div className="card glass-card" style={{ padding: '20px 24px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}>
           <div>
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <UserCheck size={24} color="#15803d" />
-              <span>Caregiver Management</span>
+            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>
+              Caregivers & Nurses Roster
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-              Manage caregiver staff, qualifications, elderly resident assignments, daily reports, and performance scorecards
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.86rem', margin: '2px 0 0 0' }}>
+              Staff directory, capacity limits, shift allocations, and performance evaluations
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <button
-              className="btn btn-secondary"
+              className="btn btn-secondary btn-sm"
+              onClick={handleExportCsv}
+              title="Export caregiver directory to CSV"
+            >
+              <Download size={16} />
+              <span>Export CSV</span>
+            </button>
+
+            <button
+              className="btn btn-secondary btn-sm"
               onClick={fetchCaregivers}
               disabled={loading}
-              style={{ padding: '8px 14px' }}
+              title="Refresh list"
             >
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               <span>Refresh</span>
             </button>
 
             <button
-              className="btn btn-primary"
+              className="btn btn-primary btn-sm"
               onClick={() => setIsAddModalOpen(true)}
-              style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
             >
-              <UserPlus size={18} />
-              <span>Add New Caregiver</span>
+              <UserPlus size={16} />
+              <span>Register Caregiver</span>
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Search & Shift Filter */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginTop: '18px' }}>
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onSearch={handleSearchSubmit}
-            placeholder="Search caregiver name, email, or qualification..."
-          />
+      {/* Filter and Search Bar */}
+      <div className="card glass-card" style={{ padding: '16px 20px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ flex: '1 1 260px' }}>
+            <SearchBar
+              value={searchTerm}
+              onChange={setSearchTerm}
+              onSearch={handleSearchSubmit}
+              placeholder="Search by caregiver name, qualification, or email..."
+            />
+          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Filter size={16} style={{ color: 'var(--text-muted)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {/* Shift Filter */}
             <select
               className="form-select"
-              value={shiftFilter}
-              onChange={(e) => { setShiftFilter(e.target.value); setPage(1); }}
-              style={{ padding: '8px 12px', fontSize: '0.88rem', borderRadius: '8px' }}
+              value={selectedShift}
+              onChange={(e) => {
+                setSelectedShift(e.target.value);
+                setPage(1);
+              }}
+              style={{ padding: '8px 12px', fontSize: '0.85rem', width: 'auto' }}
             >
               <option value="all">All Shifts</option>
               <option value="Day">Day Shift</option>
               <option value="Night">Night Shift</option>
-              <option value="Rotational">Rotational Shift</option>
+              <option value="Rotational">Rotational</option>
+            </select>
+
+            {/* Status Filter */}
+            <select
+              className="form-select"
+              value={selectedStatus}
+              onChange={(e) => {
+                setSelectedStatus(e.target.value);
+                setPage(1);
+              }}
+              style={{ padding: '8px 12px', fontSize: '0.85rem', width: 'auto' }}
+            >
+              <option value="all">All Statuses</option>
+              <option value="Active">Active Only</option>
+              <option value="Inactive">Inactive</option>
+              <option value="On Leave">On Leave</option>
+            </select>
+
+            {/* District Filter */}
+            <select
+              className="form-select"
+              value={selectedDistrict}
+              onChange={(e) => {
+                setSelectedDistrict(e.target.value);
+                setPage(1);
+              }}
+              style={{ padding: '8px 12px', fontSize: '0.85rem', width: 'auto' }}
+            >
+              <option value="all">All Districts</option>
+              {KERALA_DISTRICTS.map((dist) => (
+                <option key={dist} value={dist}>{dist}</option>
+              ))}
             </select>
           </div>
         </div>
       </div>
 
-      {error && (
-        <div className="alert alert-error">
-          <AlertTriangle size={18} />
-          <span>{error}</span>
-        </div>
-      )}
-
       {/* Main Table Card */}
-      <div className="glass-card" style={{ padding: '20px 0' }}>
+      <div className="card glass-card" style={{ padding: 0, overflow: 'hidden' }}>
         <CaregiverTable
           caregivers={caregivers}
           loading={loading}
-          onAssignElderly={(c) => setAssignCaregiver(c)}
-          onViewReports={(c) => setViewReportsCaregiver(c)}
-          onViewPerformance={(c) => setViewPerfCaregiver(c)}
-          onEdit={(c) => setEditCaregiver(c)}
-          onDelete={(c) => setDeleteCaregiver(c)}
+          selectedIds={selectedIds}
+          onSelectCaregiver={handleSelectCaregiver}
+          onSelectAll={handleSelectAll}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSort={handleSort}
+          onAssignElderly={(cg) => setAssignCaregiver(cg)}
+          onViewReports={(cg) => setViewReportsCaregiver(cg)}
+          onViewPerformance={(cg) => setViewPerfCaregiver(cg)}
+          onEdit={(cg) => setEditCaregiver(cg)}
+          onDelete={(cg) => setDeleteCaregiver(cg)}
         />
 
-        <Pagination
-          page={page}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          limit={10}
-          onPageChange={(p) => setPage(p)}
-        />
+        {totalPages > 1 && (
+          <div style={{ padding: '16px', borderTop: '1px solid var(--border-subtle, #e2e8f0)' }}>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              onPageChange={setPage}
+            />
+          </div>
+        )}
       </div>
 
-      {/* ADD CAREGIVER MODAL */}
+      {/* Modals */}
       <CaregiverFormModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -220,44 +355,45 @@ export const CaregiverManagement = () => {
         loading={actionLoading}
       />
 
-      {/* EDIT CAREGIVER MODAL */}
       <CaregiverFormModal
         isOpen={!!editCaregiver}
         onClose={() => setEditCaregiver(null)}
         onSubmit={handleUpdateCaregiver}
-        caregiver={editCaregiver}
+        initialData={editCaregiver}
+        isEdit={true}
         loading={actionLoading}
       />
 
-      {/* ASSIGN ELDERLY MODAL */}
       <AssignElderlyToCaregiverModal
         isOpen={!!assignCaregiver}
-        onClose={() => setAssignCaregiver(null)}
+        onClose={() => {
+          setAssignCaregiver(null);
+          fetchCaregivers();
+        }}
         caregiver={assignCaregiver}
         onAssign={handleAssignElderly}
         onRemove={handleRemoveElderly}
       />
 
-      {/* DAILY REPORTS MODAL */}
       <DailyReportsModal
         isOpen={!!viewReportsCaregiver}
         onClose={() => setViewReportsCaregiver(null)}
         caregiver={viewReportsCaregiver}
       />
 
-      {/* PERFORMANCE SCORECARD MODAL */}
       <CaregiverPerformanceModal
         isOpen={!!viewPerfCaregiver}
         onClose={() => setViewPerfCaregiver(null)}
         caregiver={viewPerfCaregiver}
       />
 
-      {/* DELETE CONFIRMATION MODAL */}
       <DeleteConfirmationModal
         isOpen={!!deleteCaregiver}
         onClose={() => setDeleteCaregiver(null)}
-        onConfirm={handleDeleteConfirm}
+        onConfirm={handleDeleteCaregiverConfirm}
         user={deleteCaregiver}
+        title="Delete Caregiver Profile"
+        entityType="Caregiver"
         loading={actionLoading}
       />
     </div>

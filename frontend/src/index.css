@@ -3021,21 +3021,44 @@ h1, h2, h3, h4, h5, h6 {
   align-items: start;
 }
 
-@media (max-width: 1100px) {
+.admin-mobile-toggle {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
   .admin-layout {
     grid-template-columns: 1fr !important;
   }
-  .admin-sidebar {
-    position: static !important;
-    border-radius: var(--radius-lg);
+  .admin-mobile-toggle {
+    display: inline-flex !important;
   }
-  .admin-nav {
-    flex-direction: row !important;
-    flex-wrap: wrap;
-    display: flex;
+  .admin-sidebar-drawer {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 290px;
+    background: #ffffff !important;
+    z-index: 99999;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
+    padding: 24px !important;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    display: block !important;
   }
-  .admin-nav-item {
-    white-space: nowrap;
+  .admin-sidebar-drawer.open {
+    transform: translateX(0) !important;
+  }
+  .admin-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 99998;
+    backdrop-filter: blur(3px);
   }
 }
 

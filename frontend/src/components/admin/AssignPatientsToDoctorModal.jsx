@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Users, UserPlus, Trash2 } from 'lucide-react';
 import elderlyService from '../../services/elderlyService';
+import { useToast } from '../../context/ToastContext';
 
 export const AssignPatientsToDoctorModal = ({
   isOpen,
@@ -9,6 +10,7 @@ export const AssignPatientsToDoctorModal = ({
   onAssign,
   onRemove
 }) => {
+  const toast = useToast();
   const [elderlyOptions, setElderlyOptions] = useState([]);
   const [selectedElderlyId, setSelectedElderlyId] = useState('');
   const [loadingElderly, setLoadingElderly] = useState(false);
@@ -49,8 +51,9 @@ export const AssignPatientsToDoctorModal = ({
     try {
       setActionLoading(true);
       await onAssign(doctor.id, selectedElderlyId);
+      toast.success('Patient assigned to doctor successfully');
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to assign elderly patient.');
+      toast.error(err.response?.data?.detail || 'Failed to assign elderly patient.');
     } finally {
       setActionLoading(false);
     }
@@ -60,8 +63,9 @@ export const AssignPatientsToDoctorModal = ({
     try {
       setActionLoading(true);
       await onRemove(doctor.id, elderlyId);
+      toast.success('Patient assignment removed');
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to remove patient assignment.');
+      toast.error(err.response?.data?.detail || 'Failed to remove patient assignment.');
     } finally {
       setActionLoading(false);
     }

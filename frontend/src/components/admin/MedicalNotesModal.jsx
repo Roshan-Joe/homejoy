@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Plus, Stethoscope, Pill, Calendar } from 'lucide-react';
 import doctorService from '../../services/doctorService';
+import { useToast } from '../../context/ToastContext';
 
 export const MedicalNotesModal = ({ isOpen, onClose, doctor = null }) => {
+  const toast = useToast();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -45,7 +47,7 @@ export const MedicalNotesModal = ({ isOpen, onClose, doctor = null }) => {
   const handleCreateNote = async (e) => {
     e.preventDefault();
     if (!newNote.elderly_id) {
-      alert('Please select a patient for the medical note.');
+      toast.warning('Please select a patient for the medical note.');
       return;
     }
 
@@ -56,10 +58,11 @@ export const MedicalNotesModal = ({ isOpen, onClose, doctor = null }) => {
         prescriptions: newNote.prescriptions ? newNote.prescriptions.split(',').map(s => s.trim()).filter(Boolean) : []
       };
       await doctorService.createMedicalNote(doctor.id, payload);
+      toast.success('Medical note created successfully');
       setShowAddForm(false);
       fetchNotes();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to save medical note.');
+      toast.error(err.response?.data?.detail || 'Failed to save medical note.');
     } finally {
       setSubmitting(false);
     }

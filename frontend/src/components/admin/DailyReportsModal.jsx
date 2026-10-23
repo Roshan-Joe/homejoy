@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, FileText, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
 import caregiverService from '../../services/caregiverService';
+import { useToast } from '../../context/ToastContext';
 
 export const DailyReportsModal = ({ isOpen, onClose, caregiver = null }) => {
+  const toast = useToast();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -47,17 +49,18 @@ export const DailyReportsModal = ({ isOpen, onClose, caregiver = null }) => {
   const handleCreateReport = async (e) => {
     e.preventDefault();
     if (!newReport.elderly_id) {
-      alert('Please select an elderly patient for the report.');
+      toast.warning('Please select an elderly patient for the report.');
       return;
     }
 
     try {
       setSubmitting(true);
       await caregiverService.addDailyReport(caregiver.id, newReport);
+      toast.success('Daily report submitted successfully');
       setShowAddForm(false);
       fetchReports();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to submit daily report.');
+      toast.error(err.response?.data?.detail || 'Failed to submit daily report.');
     } finally {
       setSubmitting(false);
     }

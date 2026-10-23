@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { X, UserCheck, Shield } from 'lucide-react';
 import RoleDropdown from './RoleDropdown';
 import userService from '../../services/userService';
+import { useToast } from '../../context/ToastContext';
 
 export const ChangeRoleModal = ({ isOpen, onClose, onRoleAssigned, initialRole = 'Caregiver' }) => {
+  const toast = useToast();
   const [users, setUsers] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [selectedRole, setSelectedRole] = useState(initialRole);
@@ -38,16 +40,17 @@ export const ChangeRoleModal = ({ isOpen, onClose, onRoleAssigned, initialRole =
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedUserId) {
-      alert('Please select a user to assign the role.');
+      toast.warning('Please select a user to assign the role.');
       return;
     }
 
     try {
       setSubmitting(true);
       await onRoleAssigned(selectedUserId, selectedRole);
+      toast.success('Role updated successfully');
       onClose();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to assign role to user.');
+      toast.error(err.response?.data?.detail || 'Failed to assign role to user.');
     } finally {
       setSubmitting(false);
     }
