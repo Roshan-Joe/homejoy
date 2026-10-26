@@ -141,6 +141,7 @@ class AssignmentService:
                     "$set": {
                         "assigned_caregiver_id": cg_user_id,
                         "assigned_caregiver_name": cg_name,
+                        "assigned_caregiver_date": now_iso,
                         "updatedAt": now_iso
                     }
                 }
@@ -203,6 +204,19 @@ class AssignmentService:
             "title": "📋 New Client Assigned",
             "message": f"Resident {eld_name} has been assigned to your care roster.",
             "type": "system",
+            "status": "unread",
+            "created_at": now_iso,
+            "created_by": admin_name
+        })
+
+        # Deliver in-app notification to the elderly resident
+        eld_user_id = str(elderly_doc.get("user_id") or eld_pk_str)
+        notifications_collection.insert_one({
+            "user_id": eld_user_id,
+            "target_role": "Elderly",
+            "title": "Caregiver Assigned",
+            "message": f"Welcome! {cg_name} has been assigned as your primary caregiver. Your HomeJoy portal is now active.",
+            "type": "caregiver_assigned",
             "status": "unread",
             "created_at": now_iso,
             "created_by": admin_name

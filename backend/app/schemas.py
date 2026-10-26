@@ -3,6 +3,8 @@ from typing import Optional, List, Dict, Any
 import re
 import unicodedata
 
+from app.constants import DEFAULT_DISTRICT, validate_district
+
 COMMON_PASSWORDS = {
     "password", "12345678", "123456789", "qwerty123", "password123", "admin123",
     "homejoy123", "welcome123", "letmein123", "iloveyou", "secret123"
@@ -13,6 +15,7 @@ class UserCreate(BaseModel):
     email: EmailStr = Field(..., json_schema_extra={"example": "johndoe@example.com"})
     password: str = Field(..., min_length=8, max_length=72, json_schema_extra={"example": "Password123"})
     role: str = Field(default="Elderly", json_schema_extra={"example": "Elderly"})
+    district: Optional[str] = Field(default=DEFAULT_DISTRICT, json_schema_extra={"example": "Ernakulam"})
 
     # Guardian / Family Contact Fields (Mandatory for Elderly role registration)
     guardian_name: Optional[str] = None
@@ -21,6 +24,13 @@ class UserCreate(BaseModel):
     guardian_email: Optional[EmailStr] = None
     guardian_report_consent: Optional[bool] = False
     guardian_report_enabled: Optional[bool] = None
+
+    @field_validator("district")
+    @classmethod
+    def validate_district_field(cls, v):
+        if v is None or not str(v).strip():
+            return DEFAULT_DISTRICT
+        return validate_district(v, required=False) or DEFAULT_DISTRICT
 
     @field_validator("full_name")
     @classmethod

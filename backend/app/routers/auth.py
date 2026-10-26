@@ -44,10 +44,12 @@ def register(user_data: UserCreate):
     # Hash password & construct user doc
     hashed_pwd = get_password_hash(user_data.password)
     now_iso = datetime.now(timezone.utc).isoformat()
+    canonical_district = getattr(user_data, "district", None) or "Other"
     
     user_doc = {
         "full_name": user_data.full_name.strip(),
         "email": email_clean,
+        "district": canonical_district,
         "hashed_password": hashed_pwd,
         "role": canonical_role,
         "is_active": True,
@@ -65,6 +67,7 @@ def register(user_data: UserCreate):
             "name": user_data.full_name.strip(),
             "full_name": user_data.full_name.strip(),
             "email": email_clean,
+            "district": canonical_district,
             "guardian_name": user_data.guardian_name,
             "guardian_relationship": user_data.guardian_relationship or "Guardian",
             "guardian_phone": user_data.guardian_phone,

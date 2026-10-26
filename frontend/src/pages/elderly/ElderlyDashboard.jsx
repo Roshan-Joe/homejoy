@@ -45,7 +45,11 @@ import {
   Activity,
   Wind,
   ShieldAlert,
-  FileText
+  FileText,
+  Clock,
+  MapPin,
+  Phone,
+  RefreshCw
 } from 'lucide-react';
 
 import elderlyWelcomeImg from '../../assets/elderly_welcome.png';
@@ -164,6 +168,225 @@ export const ElderlyDashboard = () => {
   const greeting = getTimeBasedGreeting();
   const firstName = profile?.full_name?.split(' ')[0] || user?.full_name?.split(' ')[0] || 'Friend';
 
+  const isCaregiverAssigned = Boolean(
+    caregiver?.is_assigned &&
+    profile?.assigned_caregiver_id &&
+    profile?.assigned_caregiver_id !== 'Not Assigned'
+  );
+
+  // 1. Loading state
+  if (loading) {
+    return (
+      <div className="scrim-bg-wrapper page-bg-elderly" style={{ padding: '80px 0', minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LoadingState text="Connecting to your HomeJoy care portal..." />
+      </div>
+    );
+  }
+
+  // 2. Gate unassigned newly registered clients until admin allocates a caregiver
+  if (!isCaregiverAssigned) {
+    return (
+      <div className="scrim-bg-wrapper page-bg-elderly" style={{ padding: '32px 0', minHeight: '100vh' }}>
+        <div className="scrim-overlay-warm" />
+        <div className="scrim-content elderly-view container-narrow page-wrapper">
+          {/* Header */}
+          <header className="card glass-card" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '18px 24px',
+            marginBottom: '24px',
+            borderRadius: 'var(--radius-xl)',
+            border: '1.5px solid var(--border)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{
+                width: '50px',
+                height: '50px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, var(--primary) 0%, #059669 100%)',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.4rem',
+                fontWeight: 800,
+                boxShadow: '0 4px 12px rgba(13, 148, 136, 0.3)'
+              }}>
+                {((profile?.full_name || user?.full_name || 'U')).charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--primary-hover)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  HomeJoy Elderly Portal
+                </span>
+                <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px', margin: 0 }}>
+                  {profile?.full_name || user?.full_name || 'Welcome'}
+                </h1>
+              </div>
+            </div>
+
+            <button
+              id="elderly-signout-btn"
+              onClick={logout}
+              className="btn btn-danger btn-sm"
+              style={{ minHeight: '44px', padding: '10px 18px', fontSize: '0.92rem', fontWeight: 700, borderRadius: 'var(--radius-lg)' }}
+            >
+              <LogOut size={16} />
+              <span>Sign Out</span>
+            </button>
+          </header>
+
+          {/* Pending Assignment Gate Card */}
+          <div className="card glass-card animate-fade-in" style={{
+            padding: '36px 32px',
+            borderRadius: '24px',
+            border: '2px solid rgba(245, 158, 11, 0.35)',
+            background: 'linear-gradient(135deg, #ffffff 0%, #fffbeb 100%)',
+            boxShadow: '0 16px 36px rgba(245, 158, 11, 0.1)',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '84px',
+              height: '84px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+              color: '#d97706',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px',
+              boxShadow: '0 8px 20px rgba(217, 119, 6, 0.2)'
+            }}>
+              <Clock size={42} />
+            </div>
+
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fef3c7', color: '#92400e', padding: '6px 14px', borderRadius: '9999px', fontSize: '0.82rem', fontWeight: 800, marginBottom: '14px', border: '1px solid #fcd34d' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#d97706', display: 'inline-block' }} />
+              Caregiver Allocation in Progress
+            </div>
+
+            <h2 style={{ fontSize: '1.65rem', fontWeight: 800, color: '#1e293b', marginBottom: '10px' }}>
+              Welcome to HomeJoy, {firstName}!
+            </h2>
+
+            <p style={{ maxWidth: '640px', margin: '0 auto 24px', fontSize: '1rem', color: '#475569', lineHeight: 1.6 }}>
+              To ensure your personal health and safety, HomeJoy pairs every resident with an authorized, certified caregiver dedicated to your district. Our care administrators are currently assigning your primary caregiver.
+            </p>
+
+            {/* Resident Registration Summary Card */}
+            <div style={{
+              maxWidth: '560px',
+              margin: '0 auto 28px',
+              background: '#ffffff',
+              borderRadius: '16px',
+              padding: '20px 24px',
+              border: '1px solid #e2e8f0',
+              textAlign: 'left'
+            }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
+                Your Registration Record
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block' }}>Assigned Region / District</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.98rem', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <MapPin size={15} style={{ color: '#e11d48' }} /> {profile?.district || user?.district || 'Kerala'}
+                  </span>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block' }}>Resident Account</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.98rem', color: '#0f172a' }}>
+                    {profile?.full_name || user?.full_name}
+                  </span>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block' }}>Family / Guardian Contact</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a' }}>
+                    {profile?.guardian_name || 'Guardian'} ({profile?.guardian_relationship || 'Contact'})
+                  </span>
+                  <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                    {profile?.guardian_phone || profile?.guardian_email || 'On file'}
+                  </div>
+                </div>
+
+                <div>
+                  <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block' }}>Account Status</span>
+                  <span className="badge badge-warning" style={{ fontSize: '0.8rem', fontWeight: 700 }}>
+                    Awaiting Caregiver
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3 Step Care Journey */}
+            <div style={{
+              maxWidth: '560px',
+              margin: '0 auto 28px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'relative'
+            }}>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#059669', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px', fontWeight: 800 }}>
+                  <CheckCircle2 size={20} />
+                </div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#059669' }}>Registered</span>
+              </div>
+
+              <div style={{ height: '2px', flex: 1, background: '#d97706' }} />
+
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#d97706', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px', fontWeight: 800 }}>
+                  <Clock size={18} />
+                </div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#d97706' }}>Caregiver Match</span>
+              </div>
+
+              <div style={{ height: '2px', flex: 1, background: '#cbd5e1' }} />
+
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f1f5f9', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 6px', fontWeight: 800, border: '1px solid #cbd5e1' }}>
+                  <ShieldCheck size={18} />
+                </div>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#94a3b8' }}>Portal Access</span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              <button
+                id="check-caregiver-status-btn"
+                onClick={loadHome}
+                className="btn btn-primary"
+                style={{
+                  minHeight: '48px',
+                  padding: '12px 26px',
+                  fontSize: '1rem',
+                  fontWeight: 800,
+                  borderRadius: '9999px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <RefreshCw size={18} />
+                <span>Check Assignment Status</span>
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.825rem', color: '#64748b', marginTop: '18px', margin: '18px 0 0' }}>
+              Once an administrator allocates your caregiver, clicking Check Assignment Status (or refreshing) will immediately unlock your health companion.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Render sub-screens
   if (screen !== 'home') {
     const sharedProps = { onBack: goHome };
@@ -244,6 +467,115 @@ export const ElderlyDashboard = () => {
           <span>Sign Out</span>
         </button>
       </header>
+
+      {/* Prominent Assigned Caregiver Banner: Informs the elderly resident of caregiver details */}
+      {caregiver && caregiver.is_assigned && (
+        <section
+          className="card glass-card animate-fade-in"
+          style={{
+            marginBottom: '24px',
+            padding: '24px 28px',
+            borderRadius: 'var(--radius-xl)',
+            background: 'linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%)',
+            border: '2px solid rgba(13, 148, 136, 0.35)',
+            boxShadow: '0 8px 24px rgba(13, 148, 136, 0.12)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '6px 12px', fontSize: '0.82rem', fontWeight: 800 }}>
+                <Sparkles size={14} /> Assigned Primary Caregiver
+              </span>
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                Dedicated Care Provider
+              </span>
+            </div>
+            {caregiver.assigned_date && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                Assigned: {new Date(caregiver.assigned_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </span>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, var(--primary) 0%, #0284c7 100%)',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.6rem',
+                fontWeight: 800,
+                boxShadow: '0 6px 16px rgba(13, 148, 136, 0.25)',
+                flexShrink: 0
+              }}>
+                {(caregiver.caregiver_name || 'C').charAt(0).toUpperCase()}
+              </div>
+
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, lineHeight: 1.2 }}>
+                  {caregiver.caregiver_name}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginTop: '6px', fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+                  <span style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                    {caregiver.qualification || 'Certified Senior Care Specialist'}
+                  </span>
+                  <span>•</span>
+                  <span>{caregiver.shift || 'Day Shift (8 AM - 4 PM)'}</span>
+                  {caregiver.district && (
+                    <>
+                      <span>•</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <MapPin size={13} style={{ color: '#e11d48' }} /> {caregiver.district}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              {caregiver.phone && (
+                <a
+                  href={`tel:${caregiver.phone}`}
+                  className="btn btn-primary btn-sm"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 18px',
+                    fontWeight: 800,
+                    borderRadius: 'var(--radius-lg)',
+                    textDecoration: 'none'
+                  }}
+                >
+                  <Phone size={16} />
+                  <span>Call {caregiver.phone}</span>
+                </a>
+              )}
+              <button
+                onClick={() => setScreen('caregiver')}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 18px',
+                  fontWeight: 700,
+                  borderRadius: 'var(--radius-lg)'
+                }}
+              >
+                <UserCheck size={16} />
+                <span>View Caregiver</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Free Web Push Notification Opt-in Prompt */}
       {showNotifBanner && (

@@ -800,17 +800,34 @@ class ElderlyClientService:
             }
 
         phone = ""
+        email = ""
+        qualification = "Certified Senior Caregiver"
+        shift = "Day Shift (8 AM - 4 PM)"
+        district = ""
+        experience_years = 3
+        profile_image = ""
+
         try:
             cg_doc = caregivers_collection.find_one({"user_id": caregiver_id})
-            if not cg_doc:
+            if not cg_doc and ObjectId.is_valid(caregiver_id):
                 cg_doc = caregivers_collection.find_one({"_id": ObjectId(caregiver_id)})
+            
             if cg_doc:
                 phone = cg_doc.get("phone", "")
-            else:
-                # Fallback to users collection
+                email = cg_doc.get("email", "")
+                qualification = cg_doc.get("qualification") or qualification
+                shift = cg_doc.get("shift") or shift
+                district = cg_doc.get("district") or district
+                experience_years = cg_doc.get("experience_years") or experience_years
+                profile_image = cg_doc.get("profileImage", "")
+
+            # Fallback to users collection if phone or email missing
+            if (not phone or not email) and ObjectId.is_valid(caregiver_id):
                 cg_user = users_collection.find_one({"_id": ObjectId(caregiver_id)})
                 if cg_user:
-                    phone = cg_user.get("phone", "")
+                    phone = phone or cg_user.get("phone", "")
+                    email = email or cg_user.get("email", "")
+                    profile_image = profile_image or cg_user.get("profileImage", "")
         except Exception:
             pass
 
@@ -819,6 +836,12 @@ class ElderlyClientService:
             "caregiver_id": caregiver_id,
             "caregiver_name": profile.get("assigned_caregiver_name", "Assigned Caregiver"),
             "phone": phone,
+            "email": email,
+            "qualification": qualification,
+            "shift": shift,
+            "district": district,
+            "experience_years": experience_years,
+            "profile_image": profile_image,
             "assigned_date": profile.get("assigned_caregiver_date") or profile.get("updatedAt"),
         }
 

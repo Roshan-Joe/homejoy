@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Heart, Mail, Lock, Shield, AlertCircle, Check, Eye, EyeOff, Info } from 'lucide-react';
+import { Heart, Mail, Lock, Shield, AlertCircle, Check, Eye, EyeOff, Info, MapPin } from 'lucide-react';
+import { KERALA_DISTRICTS } from '../constants/districts';
 
 const COMMON_PASSWORDS = new Set([
   'password', '12345678', '123456789', 'qwerty123', 'password123', 'admin123',
@@ -22,6 +23,7 @@ export const RegisterPage = () => {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
+    district: 'Ernakulam',
     password: '',
     confirm_password: '',
     role: 'Elderly',
@@ -42,6 +44,7 @@ export const RegisterPage = () => {
   // Field element refs to focus first invalid field on submit
   const fullNameRef = useRef(null);
   const emailRef = useRef(null);
+  const districtRef = useRef(null);
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   const guardianNameRef = useRef(null);
@@ -86,6 +89,11 @@ export const RegisterPage = () => {
       errors.email = 'Email address cannot exceed 254 characters.';
     } else if (!EMAIL_REGEX.test(trimmedEmail)) {
       errors.email = 'Please enter a valid email address (e.g. name@example.com).';
+    }
+
+    // 2b. District: Required Kerala district for caregiver allocation
+    if (!data.district || !data.district.trim()) {
+      errors.district = 'Please select your Kerala district for caregiver allocation.';
     }
 
     // 3. Password: 8-72 characters, >=1 letter, >=1 digit, not common, doesn't contain email name
@@ -178,6 +186,7 @@ export const RegisterPage = () => {
     const allTouched = {
       full_name: true,
       email: true,
+      district: true,
       password: true,
       confirm_password: true,
       guardian_name: true,
@@ -197,6 +206,8 @@ export const RegisterPage = () => {
         fullNameRef.current.focus();
       } else if (validationErrors.email && emailRef.current) {
         emailRef.current.focus();
+      } else if (validationErrors.district && districtRef.current) {
+        districtRef.current.focus();
       } else if (validationErrors.password && passwordRef.current) {
         passwordRef.current.focus();
       } else if (validationErrors.confirm_password && confirmPasswordRef.current) {
@@ -220,6 +231,7 @@ export const RegisterPage = () => {
       const payload = {
         full_name: formData.full_name.trim(),
         email: formData.email.trim().toLowerCase(),
+        district: formData.district || 'Ernakulam',
         password: formData.password,
         role: 'Elderly', // Public self-registration is strictly restricted to Elderly
         guardian_name: formData.guardian_name.trim() || null,
@@ -523,6 +535,49 @@ export const RegisterPage = () => {
                   }}
                 />
                 {renderFieldError('email', currentErrors.email)}
+              </div>
+
+              {/* District (Kerala) for Caregiver Allocation */}
+              <div>
+                <label
+                  htmlFor="register-district"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.9rem', fontWeight: 700, color: '#0b1f28', marginBottom: '6px' }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <MapPin size={16} style={{ color: '#00685b' }} />
+                    District (Kerala) <span style={{ color: '#b91c1c' }}>*</span>
+                  </span>
+                  <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: 500 }}>For local caregiver assignment</span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    ref={districtRef}
+                    id="register-district"
+                    name="district"
+                    value={formData.district}
+                    onChange={handleChange}
+                    onBlur={() => handleBlur('district')}
+                    aria-invalid={touched.district && Boolean(currentErrors.district)}
+                    aria-describedby={touched.district && currentErrors.district ? 'district-error' : undefined}
+                    style={{
+                      width: '100%',
+                      padding: '12px 18px',
+                      borderRadius: '9999px',
+                      border: touched.district && currentErrors.district ? '2px solid #dc2626' : '1px solid #cbd5e1',
+                      fontSize: '1rem',
+                      outline: 'none',
+                      backgroundColor: '#ffffff',
+                      cursor: 'pointer',
+                      appearance: 'auto'
+                    }}
+                  >
+                    <option value="" disabled>Select your Kerala district</option>
+                    {KERALA_DISTRICTS.map((dist) => (
+                      <option key={dist} value={dist}>{dist}</option>
+                    ))}
+                  </select>
+                </div>
+                {renderFieldError('district', currentErrors.district)}
               </div>
 
               {/* Password */}
