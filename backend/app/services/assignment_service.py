@@ -146,6 +146,19 @@ class AssignmentService:
                     }
                 }
             )
+            # Sync to users collection if user_id present
+            eld_user_id = str(elderly_doc.get("user_id") or "")
+            if eld_user_id and ObjectId.is_valid(eld_user_id):
+                users_collection.update_one(
+                    {"_id": ObjectId(eld_user_id)},
+                    {
+                        "$set": {
+                            "assigned_caregiver_id": cg_user_id,
+                            "assigned_caregiver_name": cg_name,
+                            "updatedAt": now_iso
+                        }
+                    }
+                )
         except Exception as e:
             # Rollback addition to new caregiver
             caregivers_collection.update_one(
@@ -276,6 +289,18 @@ class AssignmentService:
                 }
             }
         )
+        eld_user_id = str(elderly_doc.get("user_id") or "")
+        if eld_user_id and ObjectId.is_valid(eld_user_id):
+            users_collection.update_one(
+                {"_id": ObjectId(eld_user_id)},
+                {
+                    "$set": {
+                        "assigned_caregiver_id": None,
+                        "assigned_caregiver_name": "Not Assigned",
+                        "updatedAt": now_iso
+                    }
+                }
+            )
 
         # 2. Pull from old caregiver(s)
         old_conditions: List[Dict[str, Any]] = [

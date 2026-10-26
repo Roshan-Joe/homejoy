@@ -9,6 +9,16 @@ def calculate_risk_level(score: float) -> str:
     else:
         return "Low"
 
+def compute_age_from_dob(dob: Optional[str]) -> Optional[int]:
+    if not dob:
+        return None
+    try:
+        birth = datetime.strptime(str(dob)[:10], "%Y-%m-%d").date()
+        today = datetime.now(timezone.utc).date()
+        return today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
+    except Exception:
+        return None
+
 def serialize_elderly_doc(doc: Dict[str, Any], user_doc: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
     Serializes a MongoDB elderly_profiles document and merges associated user fields.
@@ -23,7 +33,10 @@ def serialize_elderly_doc(doc: Dict[str, Any], user_doc: Optional[Dict[str, Any]
     email = doc.get("email") or user_info.get("email") or ""
     phone = doc.get("phone") or user_info.get("phone") or ""
 
-    ai_risk_score = float(doc.get("ai_risk_score", 0.15))
+    dob = doc.get("date_of_birth") or doc.get("dob")
+    age = doc.get("age") or compute_age_from_dob(dob)
+
+    ai_risk_score = float(doc.get("ai_risk_score", 0.10))
     risk_level = doc.get("risk_level") or calculate_risk_level(ai_risk_score)
 
     return {
@@ -33,10 +46,11 @@ def serialize_elderly_doc(doc: Dict[str, Any], user_doc: Optional[Dict[str, Any]
         "full_name": full_name,
         "email": email,
         "phone": phone,
-        "age": doc.get("age", 72),
-        "date_of_birth": doc.get("date_of_birth") or doc.get("dob") or "1952-05-14",
-        "gender": doc.get("gender", "Female"),
-        "blood_group": doc.get("blood_group", "O+"),
+        "age": age,
+        "date_of_birth": dob,
+        "gender": doc.get("gender") or "",
+        "blood_group": doc.get("blood_group") or "",
+        "setup_complete": bool(doc.get("setup_complete", False)),
         "district": doc.get("district", ""),
         "address": doc.get("address") or user_info.get("address") or "",
         "emergency_contact_name": doc.get("emergency_contact_name", ""),

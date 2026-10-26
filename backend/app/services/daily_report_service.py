@@ -46,11 +46,12 @@ class DailyReportService:
         report_status = "Complete" if is_complete else "Pending"
 
         # Determine medication adherence summary
-        med_summary = "3 / 3 Taken"
         if checkin_doc and checkin_doc.get("medication_taken"):
             med_summary = checkin_doc.get("medication_taken")
         elif meds_list:
-            med_summary = f"{len(meds_list)} prescribed"
+            med_summary = f"0 / {len(meds_list)} Taken"
+        else:
+            med_summary = "No medications registered"
 
         # Determine risk level
         wellness_risk = "Low"

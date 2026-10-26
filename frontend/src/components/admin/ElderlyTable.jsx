@@ -224,12 +224,34 @@ export const ElderlyTable = ({
                 </td>
 
                 <td style={{ padding: '14px' }}>
-                  <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{p.age} yrs ({p.gender || 'F'})</div>
-                  <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>Blood: <strong>{p.blood_group || 'O+'}</strong></div>
+                  <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>
+                    {p.age ? `${p.age} yrs (${p.gender || 'Not specified'})` : (p.gender ? p.gender : <span style={{ color: '#d97706', fontSize: '0.82rem', fontWeight: 600 }}>Intake Pending</span>)}
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>
+                    Blood: <strong>{p.blood_group || 'Not recorded'}</strong>
+                  </div>
                 </td>
 
                 <td style={{ padding: '14px' }}>
-                  {getRiskBadge(p.risk_level, p.ai_risk_score)}
+                  {!p.setup_complete && !p.date_of_birth ? (
+                    <span
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '12px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        backgroundColor: '#f1f5f9',
+                        color: '#64748b',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      New Resident
+                    </span>
+                  ) : (
+                    getRiskBadge(p.risk_level, p.ai_risk_score)
+                  )}
                 </td>
 
                 <td style={{ padding: '14px' }}>

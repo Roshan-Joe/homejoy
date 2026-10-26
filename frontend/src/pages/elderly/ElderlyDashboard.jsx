@@ -21,6 +21,7 @@ import { RequestHelpModal } from '../../components/elderly/RequestHelpModal';
 import { DailyReportModal } from '../../components/elderly/DailyReportModal';
 import { VoiceCheckInModal } from '../../components/elderly/VoiceCheckInModal';
 import { MedPassModal } from '../../components/elderly/MedPassModal';
+import { HealthAndMedicationIntakeModal } from '../../components/elderly/HealthAndMedicationIntakeModal';
 
 import { VitalsGuardChart } from '../../components/elderly/VitalsGuardChart';
 import { SmartPillCompanion } from '../../components/elderly/SmartPillCompanion';
@@ -92,6 +93,7 @@ export const ElderlyDashboard = () => {
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [isMedPassModalOpen, setIsMedPassModalOpen] = useState(false);
+  const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
   const [todayReport, setTodayReport] = useState(null);
   const [activeHelpRequest, setActiveHelpRequest] = useState(null);
 
@@ -168,11 +170,29 @@ export const ElderlyDashboard = () => {
   const greeting = getTimeBasedGreeting();
   const firstName = profile?.full_name?.split(' ')[0] || user?.full_name?.split(' ')[0] || 'Friend';
 
+  // Robust assignment detection across profile and caregiver objects
   const isCaregiverAssigned = Boolean(
-    caregiver?.is_assigned &&
-    profile?.assigned_caregiver_id &&
-    profile?.assigned_caregiver_id !== 'Not Assigned'
+    caregiver?.is_assigned === true ||
+    (profile?.assigned_caregiver_id && profile?.assigned_caregiver_id !== 'Not Assigned') ||
+    (profile?.assigned_caregiver_name && profile?.assigned_caregiver_name !== 'Not Assigned')
   );
+
+  // Auto-poll assignment status while waiting so the client moves to the main site automatically
+  useEffect(() => {
+    if (!isCaregiverAssigned) {
+      const interval = setInterval(() => {
+        loadHome();
+      }, 3500);
+      return () => clearInterval(interval);
+    }
+  }, [isCaregiverAssigned, loadHome]);
+
+  // Prompt newly entered client for medications, DOB, and health conditions if intake pending
+  useEffect(() => {
+    if (isCaregiverAssigned && profile && !profile.setup_complete && !sessionStorage.getItem('hj_intake_dismissed')) {
+      setIsIntakeModalOpen(true);
+    }
+  }, [isCaregiverAssigned, profile]);
 
   // 1. Loading state
   if (loading) {
@@ -706,11 +726,11 @@ export const ElderlyDashboard = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button
               id="banner-complete-btn"
-              onClick={() => setScreen(missingItems.includes('Emergency Contact') ? 'emergency-contacts' : missingItems.includes('Health Conditions') ? 'health' : 'profile')}
+              onClick={() => setIsIntakeModalOpen(true)}
               className="btn btn-primary btn-sm"
               style={{ minHeight: '48px', padding: '10px 18px', fontWeight: 800 }}
             >
-              <span>Complete Now</span>
+              <span>Complete Intake Now</span>
               <ArrowRight size={18} />
             </button>
             <button
@@ -1160,6 +1180,20 @@ export const ElderlyDashboard = () => {
           <Sparkles size={20} />
           <span>Talk to Joy 🎙️</span>
         </button>
+
+        {/* First-Time Health & Medication Intake Wizard */}
+        <HealthAndMedicationIntakeModal
+          isOpen={isIntakeModalOpen}
+          onClose={() => {
+            sessionStorage.setItem('hj_intake_dismissed', '1');
+            setIsIntakeModalOpen(false);
+          }}
+          onComplete={() => {
+            setIsIntakeModalOpen(false);
+            loadHome();
+          }}
+          caregiverName={caregiver?.caregiver_name || profile?.assigned_caregiver_name}
+        />
         </div>
       </div>
     );
